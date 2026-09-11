@@ -1,0 +1,6 @@
+{
+  "name": "Toolbox Word",
+  "description": "Plataforma global de herramientas online para PDF a Word, citas y referencias bibliográficas, documentos, texto, imágenes y productividad con privacidad total.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
