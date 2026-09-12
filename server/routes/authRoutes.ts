@@ -483,3 +483,115 @@ authRouter.post('/sessions/revoke-others', requireAuth, (req: AuthenticatedReque
   logAudit(req, 'revoke_other_sessions', 'auth/session', { revokedCount: count });
   return res.json({ success: true, count, message: `${count} sesiones cerradas.` });
 });
+
+// 8. Secure Password Recovery Flow
+authRouter.post(
+  '/forgot-password',
+  rateLimiter({ windowMs: 15 * 60 * 1000, max: 5, actionName: 'auth_forgot_password', message: 'Demasiadas solicitudes de recuperación. Intenta más tarde.' }),
+  async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: 'MissingEmail', message: 'Ingresa un correo electrónico válido.' });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const data = db.getData();
+      const user = data.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+      if (user && user.status !== 'blocked') {
+        // Generate single-use secure cryptographic token
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        user.resetPasswordTokenHash = tokenHash;
+        user.resetPasswordExpiresAt = Date.now() + 60 * 60 * 1000; // 1 hour expiration
+        db.save();
+
+        console.log(`[AUTH-RECOVERY] Password recovery token generated for account. Expiration: 1 hour.`);
+      }
+
+      // Consistent response to prevent user email enumeration (OWASP Best Practice)
+      return res.json({
+        success: true,
+        message: 'Si el correo electrónico está registrado en nuestro sistema, recibirás las instrucciones para restablecer tu contraseña.'
+      });
+    } catch (err) {
+      console.error('[AUTH] Forgot password error:', err);
+      return res.status(500).json({ error: 'InternalServerError', message: 'Error procesando solicitud de recuperación.' });
+    }
+  }
+);
+
+authRouter.post(
+  '/reset-password',
+  rateLimiter({ windowMs: 15 * 60 * 1000, max: 5, actionName: 'auth_reset_password', message: 'Demasiados intentos. Espera unos minutos.' }),
+  async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || typeof token !== 'string' || !newPassword || typeof newPassword !== 'string') {
+        return res.status(400).json({
+          error: 'MissingFields',
+          message: 'Se requiere el token de recuperación y la nueva contraseña.'
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          error: 'WeakPassword',
+          message: 'La nueva contraseña debe tener al menos 8 caracteres.'
+        });
+      }
+
+      const rawToken = token.trim();
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const now = Date.now();
+      const data = db.getData();
+
+      const user = data.users.find(
+        (u) =>
+          u.resetPasswordTokenHash === tokenHash &&
+          u.resetPasswordExpiresAt !== undefined &&
+          u.resetPasswordExpiresAt > now
+      );
+
+      if (!user) {
+        return res.status(400).json({
+          error: 'InvalidOrExpiredToken',
+          message: 'El enlace o código de recuperación es inválido o ha expirado. Por favor solicita uno nuevo.'
+        });
+      }
+
+      // Hash new password with PBKDF2
+      const { hash, salt } = hashPassword(newPassword);
+      user.passwordHash = hash;
+      user.salt = salt;
+
+      // Invalidate recovery token (single-use guarantee)
+      user.resetPasswordTokenHash = undefined;
+      user.resetPasswordExpiresAt = undefined;
+
+      // Reset any prior failed login attempts and unlock
+      user.failedLoginAttempts = 0;
+      user.lockedUntil = undefined;
+
+      // Invalidate ALL prior active sessions for this user across all devices
+      for (const s of data.sessions) {
+        if (s.userId === user.id) {
+          s.isValid = false;
+        }
+      }
+
+      db.save();
+
+      return res.json({
+        success: true,
+        message: 'Tu contraseña ha sido restablecida exitosamente. Todas las sesiones activas han sido cerradas por seguridad.'
+      });
+    } catch (err) {
+      console.error('[AUTH] Reset password error:', err);
+      return res.status(500).json({ error: 'InternalServerError', message: 'Error al restablecer contraseña.' });
+    }
+  }
+);

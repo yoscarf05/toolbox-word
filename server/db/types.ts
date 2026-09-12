@@ -16,6 +16,8 @@ export interface UserRecord {
   lastLoginAt?: number;
   failedLoginAttempts: number;
   lockedUntil?: number;
+  resetPasswordTokenHash?: string;
+  resetPasswordExpiresAt?: number;
 }
 
 export interface SessionRecord {

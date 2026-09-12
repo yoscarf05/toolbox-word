@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language, Category, Tool } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { TOOLS } from '../data/tools';
 import { GUIDES } from '../data/guides';
 import { BannerAd } from './AdComponents';
 import { DynamicIcon } from './DynamicIcon';
-import { ArrowLeft, ArrowRight, ShieldCheck, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShieldCheck, BookOpen, Layers } from 'lucide-react';
 
 interface CategoryPageProps {
   categoryId: string;
@@ -14,12 +14,51 @@ interface CategoryPageProps {
 }
 
 export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryId, lang, onNavigate }) => {
-  const category = CATEGORIES.find((c) => c.id === categoryId) || CATEGORIES[0];
-  const tools = TOOLS.filter((t) => t.category === categoryId);
-  const relatedGuides = GUIDES.filter((g) => g.relatedTools.some((rt) => tools.some((t) => t.id === rt)));
+  const isAll = categoryId === 'all' || categoryId === 'explore';
+  const [activeFilter, setActiveFilter] = useState<string>(isAll ? 'all' : categoryId);
+
+  const category: Category = isAll
+    ? {
+        id: 'all' as any,
+        name: {
+          es: 'Todas las Herramientas',
+          en: 'All Tools',
+          pt: 'Todas as Ferramentas',
+          fr: 'Tous les Outils',
+          de: 'Alle Werkzeuge',
+          it: 'Tutti gli Strumenti'
+        },
+        icon: 'Layers',
+        description: {
+          es: 'Catálogo completo de herramientas gratuitas, privadas y procesadas directamente en tu navegador.',
+          en: 'Complete catalog of free, private tools running directly in your browser.',
+          pt: 'Catálogo completo de ferramentas gratuitas e privadas que rodam no seu navegador.',
+          fr: 'Catalogue complet d\'outils gratuits et privés fonctionnant directement dans votre navigateur.',
+          de: 'Vollständiger Katalog kostenloser und privater Tools direkt im Browser.',
+          it: 'Catalogo completo di strumenti gratuiti e privati eseguiti direttamente nel tuo browser.'
+        }
+      }
+    : CATEGORIES.find((c) => c.id === categoryId) || CATEGORIES[0];
+
+  // If user changed filter on this page, adjust displayed tools
+  const currentCategory = activeFilter === 'all'
+    ? category
+    : (CATEGORIES.find((c) => c.id === activeFilter) || category);
+
+  const tools = activeFilter === 'all'
+    ? TOOLS
+    : TOOLS.filter((t) => t.categoryId === activeFilter || t.category === activeFilter);
+
+  // Safe filter for related guides: checks if relatedTools exists and is an array
+  const relatedGuides = GUIDES.filter((g) => {
+    const rel = Array.isArray(g.relatedTools)
+      ? g.relatedTools
+      : (g.relatedToolId ? [g.relatedToolId] : []);
+    return rel.some((rt) => tools.some((t) => t.id === rt || t.slug === rt));
+  });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
       {/* Header */}
       <div className="space-y-4">
         <button
@@ -31,25 +70,61 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categoryId, lang, on
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <DynamicIcon name={category.icon} className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            {isAll ? <Layers className="w-7 h-7" /> : <DynamicIcon name={currentCategory.icon} className="w-7 h-7" />}
           </div>
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">
-              {category.name[lang] || category.name.es}
+              {currentCategory.name[lang] || currentCategory.name.es}
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              {category.description[lang] || category.description.es}
+              {currentCategory.description[lang] || currentCategory.description.es}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Category Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+        <button
+          onClick={() => setActiveFilter('all')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+            activeFilter === 'all'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          {lang === 'es' ? 'Todas' : 'All'} ({TOOLS.length})
+        </button>
+        {CATEGORIES.map((cat) => {
+          const count = TOOLS.filter((t) => t.categoryId === cat.id || t.category === cat.id).length;
+          const isActive = activeFilter === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveFilter(cat.id)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>{cat.name[lang] || cat.name.es}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                isActive ? 'bg-blue-700 text-blue-100' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Tools List */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {lang === 'es' ? 'Herramientas disponibles en esta categoría' : 'Available Tools in this Category'}
+            {lang === 'es' ? 'Herramientas disponibles' : 'Available Tools'}
           </h2>
           <span className="text-xs font-semibold text-slate-400">
             {tools.length} {lang === 'es' ? 'herramientas' : 'tools'}

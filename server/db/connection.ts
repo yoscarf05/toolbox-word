@@ -27,7 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
   created_at BIGINT NOT NULL,
   last_login_at BIGINT,
   failed_login_attempts INTEGER,
-  locked_until BIGINT
+  locked_until BIGINT,
+  reset_password_token_hash TEXT,
+  reset_password_expires_at BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS sessions (

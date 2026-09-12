@@ -146,6 +146,17 @@ export default function App() {
       );
     }
 
+    // Explore / All Tools page: /explore, /tools, /catalog
+    if (cleanRoute === '/explore' || cleanRoute === '/tools' || cleanRoute === '/catalog') {
+      return (
+        <CategoryPage 
+          categoryId="all" 
+          lang={lang} 
+          onNavigate={navigate} 
+        />
+      );
+    }
+
     // Single Tool page: /tool/:slug
     if (cleanRoute.startsWith('/tool/')) {
       const slug = cleanRoute.replace('/tool/', '');

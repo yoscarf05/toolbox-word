@@ -167,7 +167,9 @@ class PostgresDatabase {
         createdAt: Number(u.created_at),
         lastLoginAt: u.last_login_at ? Number(u.last_login_at) : undefined,
         failedLoginAttempts: Number(u.failed_login_attempts || 0),
-        lockedUntil: u.locked_until ? Number(u.locked_until) : undefined
+        lockedUntil: u.locked_until ? Number(u.locked_until) : undefined,
+        resetPasswordTokenHash: u.reset_password_token_hash || undefined,
+        resetPasswordExpiresAt: u.reset_password_expires_at ? Number(u.reset_password_expires_at) : undefined
       }));
 
       // 3. Sessions
@@ -306,8 +308,8 @@ class PostgresDatabase {
     if (data.users && data.users.length > 0) {
       for (const u of data.users) {
         await this.pool.query(
-          `INSERT INTO users (id, name, email, password_hash, salt, role, permissions, totp_secret, totp_enabled, recovery_codes, status, created_at, last_login_at, failed_login_attempts, locked_until)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          `INSERT INTO users (id, name, email, password_hash, salt, role, permissions, totp_secret, totp_enabled, recovery_codes, status, created_at, last_login_at, failed_login_attempts, locked_until, reset_password_token_hash, reset_password_expires_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
            ON CONFLICT (id) DO UPDATE SET
              name = EXCLUDED.name,
              email = EXCLUDED.email,
@@ -321,7 +323,9 @@ class PostgresDatabase {
              status = EXCLUDED.status,
              last_login_at = EXCLUDED.last_login_at,
              failed_login_attempts = EXCLUDED.failed_login_attempts,
-             locked_until = EXCLUDED.locked_until`,
+             locked_until = EXCLUDED.locked_until,
+             reset_password_token_hash = EXCLUDED.reset_password_token_hash,
+             reset_password_expires_at = EXCLUDED.reset_password_expires_at`,
           [
             u.id,
             u.name,
@@ -337,7 +341,9 @@ class PostgresDatabase {
             u.createdAt,
             u.lastLoginAt || null,
             u.failedLoginAttempts || 0,
-            u.lockedUntil || null
+            u.lockedUntil || null,
+            u.resetPasswordTokenHash || null,
+            u.resetPasswordExpiresAt || null
           ]
         );
       }
@@ -519,8 +525,8 @@ class PostgresDatabase {
       // 2. Users
       for (const u of this.data.users) {
         await this.pool.query(
-          `INSERT INTO users (id, name, email, password_hash, salt, role, permissions, totp_secret, totp_enabled, recovery_codes, status, created_at, last_login_at, failed_login_attempts, locked_until)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          `INSERT INTO users (id, name, email, password_hash, salt, role, permissions, totp_secret, totp_enabled, recovery_codes, status, created_at, last_login_at, failed_login_attempts, locked_until, reset_password_token_hash, reset_password_expires_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
            ON CONFLICT (id) DO UPDATE SET
              name = EXCLUDED.name,
              email = EXCLUDED.email,
@@ -534,7 +540,9 @@ class PostgresDatabase {
              status = EXCLUDED.status,
              last_login_at = EXCLUDED.last_login_at,
              failed_login_attempts = EXCLUDED.failed_login_attempts,
-             locked_until = EXCLUDED.locked_until`,
+             locked_until = EXCLUDED.locked_until,
+             reset_password_token_hash = EXCLUDED.reset_password_token_hash,
+             reset_password_expires_at = EXCLUDED.reset_password_expires_at`,
           [
             u.id,
             u.name,
@@ -550,7 +558,9 @@ class PostgresDatabase {
             u.createdAt,
             u.lastLoginAt || null,
             u.failedLoginAttempts || 0,
-            u.lockedUntil || null
+            u.lockedUntil || null,
+            u.resetPasswordTokenHash || null,
+            u.resetPasswordExpiresAt || null
           ]
         );
       }

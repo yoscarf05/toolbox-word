@@ -16,7 +16,9 @@ export const users = pgTable('users', {
   createdAt: bigint('created_at', { mode: 'number' }).notNull(),
   lastLoginAt: bigint('last_login_at', { mode: 'number' }),
   failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
-  lockedUntil: bigint('locked_until', { mode: 'number' })
+  lockedUntil: bigint('locked_until', { mode: 'number' }),
+  resetPasswordTokenHash: text('reset_password_token_hash'),
+  resetPasswordExpiresAt: bigint('reset_password_expires_at', { mode: 'number' })
 });
 
 export const sessions = pgTable('sessions', {

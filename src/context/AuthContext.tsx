@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, UserHistoryItem, Language } from '../types';
 import { sendAnalyticsEvent, startAnalyticsHeartbeat } from '../utils/analytics';
+import { safeFetchJson } from '../utils/api';
 
 export interface SavedCitationItem {
   id: string;
@@ -36,6 +37,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<LoginResult>;
   verify2FA: (tempToken: string, code: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message: string; error?: string }>;
+  resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; message: string; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => void;
   // Dynamic Greeting
@@ -130,26 +133,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers['Authorization'] = `Bearer ${savedToken}`;
       }
 
-      const res = await fetch('/api/auth/me', { headers });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.authenticated && data.user) {
-          setUser(data.user);
-          if (data.sessionId) {
-            setToken(data.sessionId);
-            localStorage.setItem('toolbox_token', data.sessionId);
-          }
-        } else {
-          setUser(null);
-          setToken(null);
-          localStorage.removeItem('toolbox_token');
+      const res = await safeFetchJson<{ authenticated: boolean; user: UserProfile; sessionId?: string }>('/api/auth/me', { headers });
+      if (res.ok && res.data?.authenticated && res.data.user) {
+        setUser(res.data.user);
+        if (res.data.sessionId) {
+          setToken(res.data.sessionId);
+          localStorage.setItem('toolbox_token', res.data.sessionId);
         }
       } else {
         setUser(null);
         setToken(null);
         localStorage.removeItem('toolbox_token');
       }
-    } catch (err) {
+    } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -181,20 +177,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Unified login via Email + Password
   const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await safeFetchJson<any>('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
-      const data = await res.json();
 
       if (!res.ok) {
         return {
           success: false,
-          error: data.message || data.error || 'Error al iniciar sesión'
+          error: res.message || 'Error al iniciar sesión'
         };
       }
+
+      const data = res.data;
 
       // If Super Admin requires 2FA:
       if (data.requires2FA) {
@@ -234,20 +229,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Verify TOTP 2FA for Super Admin
   const verify2FA = async (tempToken: string, code: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch('/api/auth/verify-2fa', {
+      const res = await safeFetchJson<any>('/api/auth/verify-2fa', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tempToken, code })
       });
-
-      const data = await res.json();
 
       if (!res.ok) {
         return {
           success: false,
-          error: data.message || data.error || 'Código incorrecto'
+          error: res.message || 'Código incorrecto'
         };
       }
+
+      const data = res.data;
 
       if (data.user && data.token) {
         setUser(data.user);
@@ -272,20 +266,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Register standard user account
   const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await safeFetchJson<any>('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
-
-      const data = await res.json();
 
       if (!res.ok) {
         return {
           success: false,
-          error: data.message || data.error || 'Error al registrar la cuenta.'
+          error: res.message || 'Error al registrar la cuenta.'
         };
       }
+
+      const data = res.data;
 
       if (data.user && data.token) {
         setUser(data.user);
@@ -304,6 +297,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Respuesta inválida del servidor.' };
     } catch (err: any) {
       return { success: false, error: err.message || 'Error al conectar con el servidor.' };
+    }
+  };
+
+  // Request Password Reset
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; message: string; error?: string }> => {
+    try {
+      const res = await safeFetchJson<any>('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+
+      if (!res.ok) {
+        return {
+          success: false,
+          message: res.message || 'Error al solicitar recuperación de contraseña.',
+          error: res.error
+        };
+      }
+
+      return {
+        success: true,
+        message: res.data?.message || 'Si el correo está registrado, se han generado las instrucciones de recuperación.'
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Error de conexión.',
+        error: 'NetworkError'
+      };
+    }
+  };
+
+  // Reset Password with Token
+  const resetPassword = async (token: string, newPassword: string): Promise<{ success: boolean; message: string; error?: string }> => {
+    try {
+      const res = await safeFetchJson<any>('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      if (!res.ok) {
+        return {
+          success: false,
+          message: res.message || 'Error al restablecer la contraseña.',
+          error: res.error
+        };
+      }
+
+      return {
+        success: true,
+        message: res.data?.message || 'Contraseña actualizada con éxito.'
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Error de conexión.',
+        error: 'NetworkError'
+      };
     }
   };
 
@@ -425,6 +476,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         verify2FA,
         register,
+        requestPasswordReset,
+        resetPassword,
         logout,
         updateProfile,
         getGreeting,
