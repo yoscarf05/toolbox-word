@@ -595,3 +595,218 @@ authRouter.post(
     }
   }
 );
+
+// ============================================================================
+// ONE-TIME BOOTSTRAP: INITIAL SUPER ADMIN PROVISIONING
+// ============================================================================
+
+// Status check: returns { needsBootstrap: boolean }
+authRouter.get(
+  '/bootstrap-status',
+  rateLimiter({ windowMs: 60000, max: 30, actionName: 'auth_bootstrap_status' }),
+  async (_req: Request, res: Response) => {
+    try {
+      await db.ensureReady();
+      const pool = db.getPool();
+      const checkRes = await pool.query("SELECT COUNT(*) AS count FROM users WHERE role = 'super_admin'");
+      const superAdminCount = parseInt(checkRes.rows[0]?.count || '0', 10);
+
+      return res.json({
+        needsBootstrap: superAdminCount === 0
+      });
+    } catch (err) {
+      console.error('[BOOTSTRAP] Error checking bootstrap status:', err);
+      return res.status(500).json({
+        error: 'InternalServerError',
+        message: 'Error al verificar estado de inicialización.'
+      });
+    }
+  }
+);
+
+// One-time creation endpoint with database-level isolation & transaction
+let isBootstrapExecuting = false;
+
+authRouter.post(
+  '/bootstrap-first-superadmin',
+  rateLimiter({ windowMs: 60000, max: 5, actionName: 'auth_bootstrap_create', message: 'Demasiadas solicitudes de inicialización.' }),
+  async (req: Request, res: Response) => {
+    // Barrier 1: In-memory lock for concurrent request race conditions
+    if (isBootstrapExecuting) {
+      return res.status(409).json({
+        error: 'BootstrapInProgress',
+        message: 'Una solicitud de inicialización ya está en curso. Espera un momento.'
+      });
+    }
+
+    isBootstrapExecuting = true;
+
+    let client: any = null;
+    try {
+      await db.ensureReady();
+      const pool = db.getPool();
+
+      // Acquire dedicated connection for transactional integrity
+      client = await pool.connect();
+
+      // Start transaction with strict serializable/isolated check
+      await client.query('BEGIN');
+
+      // Barrier 2: Database-level lock and count within transaction
+      // "pg_advisory_xact_lock" ensures zero race condition across distributed instances
+      try {
+        await client.query('SELECT pg_advisory_xact_lock(987654321)');
+      } catch {
+        // Fallback for mock environments (e.g. pg-mem) that don't support advisory locks
+      }
+
+      const countRes = await client.query("SELECT COUNT(*) AS count FROM users WHERE role = 'super_admin'");
+      const superAdminCount = parseInt(countRes.rows[0]?.count || '0', 10);
+
+      if (superAdminCount > 0) {
+        await client.query('ROLLBACK');
+        return res.status(403).json({
+          error: 'BootstrapLocked',
+          message: 'El sistema ya cuenta con un Super Administrador aprovisionado. El endpoint de inicialización está permanentemente bloqueado.'
+        });
+      }
+
+      // Validate input parameters (ONLY name, email, password are accepted)
+      const { name, email, password } = req.body;
+
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'InvalidName',
+          message: 'El nombre completo del Super Administrador es obligatorio.'
+        });
+      }
+
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'InvalidEmail',
+          message: 'Debes proporcionar un correo electrónico válido.'
+        });
+      }
+
+      if (!password || typeof password !== 'string' || password.length < 8) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'WeakPassword',
+          message: 'La contraseña debe tener al menos 8 caracteres.'
+        });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = name.trim();
+
+      // Check if this email already exists under another role
+      const existingUserRes = await client.query('SELECT id FROM users WHERE email = $1', [cleanEmail]);
+      if (existingUserRes.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          error: 'EmailAlreadyExists',
+          message: 'El correo electrónico ya se encuentra registrado en el sistema.'
+        });
+      }
+
+      // Canonical password hash using server/auth.ts standard PBKDF2
+      const { hash, salt } = hashPassword(password);
+
+      const userId = 'usr_super_' + crypto.randomBytes(8).toString('hex');
+      const now = Date.now();
+
+      // Insert strictly as role = 'super_admin', totp_enabled = FALSE (triggers mandatory 2FA on first login)
+      await client.query(
+        `INSERT INTO users (
+          id, name, email, password_hash, salt, role, permissions,
+          totp_secret, totp_enabled, recovery_codes, status, created_at,
+          failed_login_attempts
+        ) VALUES (
+          $1, $2, $3, $4, $5, 'super_admin', $6::jsonb,
+          NULL, FALSE, '[]'::jsonb, 'active', $7, 0
+        )`,
+        [
+          userId,
+          cleanName,
+          cleanEmail,
+          hash,
+          salt,
+          JSON.stringify(['all']),
+          now
+        ]
+      );
+
+      // Record immutable audit log entry (NO SECRETS RECORDED)
+      const auditId = 'aud_' + crypto.randomBytes(8).toString('hex');
+      const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
+
+      await client.query(
+        `INSERT INTO audit_logs (
+          id, timestamp, actor_id, actor_email, actor_role, action,
+          target_resource, details, ip, status
+        ) VALUES (
+          $1, $2, $3, $4, 'super_admin', 'bootstrap_initial_super_admin',
+          'system', $5::jsonb, $6, 'success'
+        )`,
+        [
+          auditId,
+          now,
+          userId,
+          cleanEmail,
+          JSON.stringify({
+            event: 'one_time_super_admin_bootstrap',
+            message: 'Primer Super Administrador aprovisionado exitosamente mediante inicialización única segura.'
+          }),
+          clientIp
+        ]
+      );
+
+      // Record administrative alert
+      const alertId = 'alt_' + crypto.randomBytes(8).toString('hex');
+      await client.query(
+        `INSERT INTO admin_alerts (
+          id, timestamp, severity, type, message, read
+        ) VALUES (
+          $1, $2, 'info', 'security_bootstrap',
+          'El Super Administrador inicial ha sido aprovisionado exitosamente. La configuración de segundo factor TOTP se requerirá en el primer inicio de sesión.',
+          FALSE
+        )`,
+        [alertId, now]
+      );
+
+      // Commit transaction
+      await client.query('COMMIT');
+
+      // Refresh in-memory database cache
+      await db.syncFromPostgres();
+
+      console.log(`[BOOTSTRAP] Super Admin created successfully with email: ${cleanEmail}. One-time bootstrap is now permanently locked.`);
+
+      // Return clean JSON response - NO AUTOMATIC LOGIN (must sign in through normal flow)
+      return res.status(201).json({
+        success: true,
+        message: 'Super Administrador inicial configurado con éxito. Ahora inicia sesión con tus credenciales para configurar tu aplicación de autenticación TOTP (Google Authenticator).'
+      });
+    } catch (err: any) {
+      if (client) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {
+          // ignore rollback error
+        }
+      }
+      console.error('[BOOTSTRAP] Error in bootstrap endpoint:', err);
+      return res.status(500).json({
+        error: 'InternalServerError',
+        message: 'Ocurrió un error interno durante el aprovisionamiento inicial.'
+      });
+    } finally {
+      isBootstrapExecuting = false;
+      if (client && typeof client.release === 'function') {
+        client.release();
+      }
+    }
+  }
+);

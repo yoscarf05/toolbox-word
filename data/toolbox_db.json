@@ -1,41 +1,32 @@
 {
   "users": [
     {
-      "id": "usr_1789170815250_s11nj",
-      "name": "Admin Auditor",
-      "email": "admin_1789170815172@toolboxword.com",
-      "passwordHash": "64410b32b3ce941cf63da9ab722028c59a5da1e7c6f152ad2f7503934780640ad2f09960ffa874c659d7329fb5cef1eb1c064169169dcc112db1ba925f21a77f",
-      "salt": "124df399dcf3da25b8fdc050e75f2699",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
+      "id": "usr_super_0baab9f350678b8e",
+      "name": "Concurrent Admin A",
+      "email": "admin_a@concurrent.test",
+      "passwordHash": "57ff1eeca06001ee960d6b2342d30bbaa6de9bbb95e3a04ec8f1709ffefdc5f14d30dbe4fd051be248fccf972ee6a147a790c0b7fad703aac23b9105c2808b55",
+      "salt": "e7468ab1ce87bf760318f5fdef5ba4b7",
+      "role": "super_admin",
+      "permissions": [
+        "all"
+      ],
+      "totpEnabled": true,
       "recoveryCodes": [],
       "status": "active",
-      "createdAt": 1789170815250,
-      "failedLoginAttempts": 0
+      "createdAt": 1789226735026,
+      "failedLoginAttempts": 0,
+      "totpSecret": "62TLGRXNULFFJIA3KQXWL2D6JNQ26JGV",
+      "lastLoginAt": 1789226748270
     },
     {
-      "id": "usr_1789170848652_u1fa9",
-      "name": "Usuario Auditoria",
-      "email": "normal_1789170848511@toolboxword.com",
-      "passwordHash": "5b962e436569b30d849020f38d75cb2b5352446e092a3a69fdad67c1e81f21658e7348381f1fba7ceb3177a7ddb93a6bf8b6a5f28e7447e2352435fbbd950b56",
-      "salt": "8138f69b6649016b43123376b0e1fee8",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
-      "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789170848652,
-      "lastLoginAt": 1789170848665,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789170848810_7avka",
-      "name": "Admin Auditor",
-      "email": "admin_1789170848736@toolboxword.com",
-      "passwordHash": "87089ab831e08beb6bb960dba87728976c4e55c65d262b004178bca7bc66ded78e8d6bdfe26994a5e8c7bf48f068ac210c49945ecfc3ac72c7cfe1d1e5982225",
-      "salt": "d0954086954add212d27e5082215f8c4",
+      "id": "usr_test_admin_1789226747987",
+      "name": "Admin Tester",
+      "email": "admintester@tools.local",
+      "passwordHash": "0ce74eec178b3eebf9fc7e3e7d07d2ba3ffcb6ff6e6f8af24ff431ef14c7c5dfd3db95ec0d6c5d5378a6dffb85a20f220b6f1e43eee302dae1965f489f7c9d8b",
+      "salt": "a3f48671b15b3551c1c1e635a191790e",
       "role": "admin",
+      "status": "active",
+      "createdAt": 1789226747987,
       "permissions": [
         "manage_tools",
         "view_analytics",
@@ -43,117 +34,227 @@
       ],
       "totpEnabled": false,
       "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789170848810,
-      "lastLoginAt": 1789178571589,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789171258013_2rrbt",
-      "name": "Yocar felix ortiz",
-      "email": "yocarortiz05@hotmail.com",
-      "passwordHash": "f06672a39035df3cef9e7fd944a64b3524bb82e55fbf5597440cc360f956c45a1028f1a78f32d1c040a4e22a4042b5594f831f0cc4803695a5873a9720e29538",
-      "salt": "c5e70080f32abb89f87191d78050ae37",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
-      "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789171258013,
       "failedLoginAttempts": 0,
-      "lockedUntil": 1789220294415
+      "lastLoginAt": 1789226748350
     },
     {
-      "id": "usr_super_admin_root",
-      "name": "Super Admin (Yocar)",
-      "email": "yoscarelduro05@gmail.com",
-      "passwordHash": "0765942a462c1130b220e2c424d465e9cda324f9699edb12de087160016e61a915c6da92d27f2cb4fdc3d62f2bcc82472d051bc76b381edcc2fe57f9787a987f",
-      "salt": "502db85df809ed8b30031d55c7a5b46f",
-      "role": "super_admin",
-      "permissions": [
-        "*"
-      ],
-      "totpSecret": "LEPCRJ3XD7UDFH6XIZLCDZUFSV4LQNEO",
-      "totpEnabled": true,
-      "recoveryCodes": [
-        "32d4da1f895e19139f9ff248f95c06c9170ccedac872addd9009b1412a569e23",
-        "a5fe8e9477ab9f00e4497d82bfb3083f854150e2621cc3f5ca261ab3ce3feae6",
-        "1dc7946ccce0da3d7c9ce45417468106899fae88c0e3376c74516d07b636dec1",
-        "533c237e4d543f97bc88ed20e1af671696a33d2341320e5a279b4c1e5f0e4040",
-        "ba682a8aebc41238690a461dba978ed1402c0f115c8a33e40b9badea83376bc7",
-        "cc3804d0d53e65c562292bf55b111eaf8ce90cc54908c4668bcb38184adc4b9c",
-        "ca2ab6a5515a72d9811c4c34aa2e199ce516a9b9afeb73d11eb5cdd1c61c3cf0",
-        "9aaef1e5f8f0623c392335b4e046afa45237d3a23c48bab47db74bf9f90a3b57"
-      ],
-      "status": "active",
-      "createdAt": 1789168765826,
-      "lastLoginAt": 1789178571567,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789168794919_as4dw",
+      "id": "usr_test_user_1789226748057",
       "name": "Normal User",
-      "email": "normal@example.com",
-      "passwordHash": "f04bdd4e959d3a54a42e0b54619ac11c506a76ff679713cd58003e57537dd7e01caa2ff9d3f101f7781134852d8d19153e8567c35395ae16e8c298e6e33b63ec",
-      "salt": "6d341f66232748b46e61da5039deec8a",
+      "email": "normaluser@tools.local",
+      "passwordHash": "c3a2ed6e6366794292832c2bd50fbf310e97aeb768e741430a278c17af53967985709789cf02ae17d6bde562bedb2f26f8d6e7a211d7743ce36c976fa5392f1e",
+      "salt": "85db30d31e7d31d57a349b75c91592d5",
       "role": "user",
+      "status": "active",
+      "createdAt": 1789226748057,
       "permissions": [],
       "totpEnabled": false,
       "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789168794919,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789170783136_75txc",
-      "name": "Usuario Auditoria",
-      "email": "normal_1789170783003@toolboxword.com",
-      "passwordHash": "547b633faadcaebcbcb5a689a1340d053b8f01152fd9cc1b7efca4f2ed3a8f610c5c413540710eae6a9a0d5c3f25bd25d8986e55f89ccd2826c0a0d641c4223d",
-      "salt": "ece7b2485cd916988545cec0f4f3429c",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
-      "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789170783136,
-      "lastLoginAt": 1789170783148,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789170783293_r0lm4",
-      "name": "Admin Auditor",
-      "email": "admin_1789170783220@toolboxword.com",
-      "passwordHash": "fa20c62ba63474b99cea1b910f525d914d45a40522fb933f201da0090be80f2a2f9852fc074901586c2e48c0765edcb5d907954895cbdc71bd8825e72a2bbb25",
-      "salt": "8ffbe044c504f8d269110fe9c650b06a",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
-      "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789170783293,
-      "lastLoginAt": 1789170783298,
-      "failedLoginAttempts": 0
-    },
-    {
-      "id": "usr_1789170815083_lf4kk",
-      "name": "Usuario Auditoria",
-      "email": "normal_1789170814950@toolboxword.com",
-      "passwordHash": "e3e19b6925c96c39a0cc8583ec41032946ab052c81a2eb060d9ea85661d52965160b58493194ac50201454fc4b9f9d14a23c0aa848d94d45d0cd7619e73fab31",
-      "salt": "50650cb55a82531b069a6fad841e6dde",
-      "role": "user",
-      "permissions": [],
-      "totpEnabled": false,
-      "recoveryCodes": [],
-      "status": "active",
-      "createdAt": 1789170815083,
-      "lastLoginAt": 1789170815094,
       "failedLoginAttempts": 0
     }
   ],
-  "sessions": [],
+  "sessions": [
+    {
+      "id": "6714e5bd3a735b414947341cbc1b7c806793df0408ca70d9243a66bcb80568e5",
+      "userId": "usr_super_0baab9f350678b8e",
+      "role": "super_admin",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "device": "Desktop",
+      "browser": "Unknown",
+      "os": "Unknown",
+      "createdAt": 1789226748268,
+      "lastActivityAt": 1789226749360,
+      "expiresAt": 1789233949360,
+      "isValid": true
+    },
+    {
+      "id": "3a6b7d3a55914f1e2087c15bae819313b0b00be8d476171469aa6873b4e18e80",
+      "userId": "usr_test_admin_1789226747987",
+      "role": "admin",
+      "ip": "127.0.0.1",
+      "userAgent": "node",
+      "device": "Desktop",
+      "browser": "Unknown",
+      "os": "Unknown",
+      "createdAt": 1789226748421,
+      "lastActivityAt": 1789226749347,
+      "expiresAt": 1789233949347,
+      "isValid": true
+    }
+  ],
   "analyticsEvents": [],
   "systemErrors": [],
   "auditLogs": [
+    {
+      "id": "aud_1789226748833_6wdta",
+      "timestamp": 1789226748833,
+      "actorId": "usr_test_admin_1789226747987",
+      "actorEmail": "admintester@tools.local",
+      "actorRole": "admin",
+      "action": "change_request_created",
+      "targetResource": "system/settings",
+      "details": {
+        "requestId": "crq_1789226748832_0bd0b2aa",
+        "action": "update_system_settings"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748820_36d0k",
+      "timestamp": 1789226748820,
+      "actorId": "usr_super_0baab9f350678b8e",
+      "actorEmail": "admin_a@concurrent.test",
+      "actorRole": "super_admin",
+      "action": "change_request_rollback",
+      "targetResource": "change_request/crq_1789226748452_91b4f5e5",
+      "details": {
+        "requestId": "crq_1789226748452_91b4f5e5",
+        "action": "update_system_settings",
+        "targetResource": "system/settings",
+        "restoredData": {
+          "settings": {
+            "adsEnabled": true,
+            "maintenanceMode": false,
+            "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+            "bannerEnabled": false,
+            "sessionTimeoutMinutes": 120,
+            "maxLoginAttempts": 5,
+            "lockoutMinutes": 15,
+            "updatedAt": 1789168765704
+          }
+        }
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748722_tnmaf",
+      "timestamp": 1789226748722,
+      "actorId": "usr_test_admin_1789226747987",
+      "actorEmail": "admintester@tools.local",
+      "actorRole": "admin",
+      "action": "system_settings_updated",
+      "targetResource": "system/settings",
+      "details": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789226748442",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748720_3k5p4",
+      "timestamp": 1789226748720,
+      "actorId": "usr_test_admin_1789226747987",
+      "actorEmail": "admintester@tools.local",
+      "actorRole": "admin",
+      "action": "change_request_executed",
+      "targetResource": "system/settings",
+      "details": {
+        "requestId": "crq_1789226748452_91b4f5e5",
+        "action": "update_system_settings",
+        "executedBy": "admintester@tools.local"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748703_du201",
+      "timestamp": 1789226748703,
+      "actorId": "usr_super_0baab9f350678b8e",
+      "actorEmail": "admin_a@concurrent.test",
+      "actorRole": "super_admin",
+      "action": "change_request_approved",
+      "targetResource": "change_request/crq_1789226748452_91b4f5e5",
+      "details": {
+        "requestId": "crq_1789226748452_91b4f5e5",
+        "action": "update_system_settings",
+        "targetResource": "system/settings",
+        "requestedBy": "admintester@tools.local"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748605_o6vt1",
+      "timestamp": 1789226748605,
+      "actorId": "usr_super_0baab9f350678b8e",
+      "actorEmail": "admin_a@concurrent.test",
+      "actorRole": "super_admin",
+      "action": "change_request_rejected",
+      "targetResource": "change_request/crq_1789226748486_96a4b1bc",
+      "details": {
+        "requestId": "crq_1789226748486_96a4b1bc",
+        "action": "update_system_settings",
+        "targetResource": "system/settings",
+        "requestedBy": "admintester@tools.local"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748488_0nae1",
+      "timestamp": 1789226748488,
+      "actorId": "usr_test_admin_1789226747987",
+      "actorEmail": "admintester@tools.local",
+      "actorRole": "admin",
+      "action": "change_request_created",
+      "targetResource": "system/settings",
+      "details": {
+        "requestId": "crq_1789226748486_96a4b1bc",
+        "action": "update_system_settings"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_1789226748453_mww76",
+      "timestamp": 1789226748453,
+      "actorId": "usr_test_admin_1789226747987",
+      "actorEmail": "admintester@tools.local",
+      "actorRole": "admin",
+      "action": "change_request_created",
+      "targetResource": "system/settings",
+      "details": {
+        "requestId": "crq_1789226748452_91b4f5e5",
+        "action": "update_system_settings"
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
+    {
+      "id": "aud_6aabad1cdbb783e3",
+      "timestamp": 1789226735026,
+      "actorId": "usr_super_0baab9f350678b8e",
+      "actorEmail": "admin_a@concurrent.test",
+      "actorRole": "super_admin",
+      "action": "bootstrap_initial_super_admin",
+      "targetResource": "system",
+      "details": {
+        "event": "one_time_super_admin_bootstrap",
+        "message": "Primer Super Administrador aprovisionado exitosamente mediante inicialización única segura."
+      },
+      "ip": "203.0.113.195",
+      "status": "success"
+    },
+    {
+      "id": "aud_67545da9e87ed270",
+      "timestamp": 1789226734706,
+      "actorId": "usr_super_dbd49941a4e193a2",
+      "actorEmail": "primary_superadmin@testdomain.com",
+      "actorRole": "super_admin",
+      "action": "bootstrap_initial_super_admin",
+      "targetResource": "system",
+      "details": {
+        "event": "one_time_super_admin_bootstrap",
+        "message": "Primer Super Administrador aprovisionado exitosamente mediante inicialización única segura."
+      },
+      "ip": "127.0.0.1",
+      "status": "success"
+    },
     {
       "id": "aud_1789178572085_dwbmn",
       "timestamp": 1789178572085,
@@ -2029,7 +2130,48 @@
       "status": "success"
     }
   ],
-  "adminAlerts": [],
+  "adminAlerts": [
+    {
+      "id": "alt_1789226748832_pwmt",
+      "timestamp": 1789226748832,
+      "severity": "critical",
+      "type": "change_request_pending",
+      "message": "Hay una solicitud de cambio crítico pendiente: Modificar Configuración del Sistema / Producción (system/settings)",
+      "read": false
+    },
+    {
+      "id": "alt_1789226748486_vgms",
+      "timestamp": 1789226748486,
+      "severity": "critical",
+      "type": "change_request_pending",
+      "message": "Hay una solicitud de cambio crítico pendiente: Modificar Configuración del Sistema / Producción (system/settings)",
+      "read": false
+    },
+    {
+      "id": "alt_1789226748452_rxqx",
+      "timestamp": 1789226748452,
+      "severity": "critical",
+      "type": "change_request_pending",
+      "message": "Hay una solicitud de cambio crítico pendiente: Modificar Configuración del Sistema / Producción (system/settings)",
+      "read": false
+    },
+    {
+      "id": "alt_797112851610f6bd",
+      "timestamp": 1789226735026,
+      "severity": "info",
+      "type": "security_bootstrap",
+      "message": "El Super Administrador inicial ha sido aprovisionado exitosamente. La configuración de segundo factor TOTP se requerirá en el primer inicio de sesión.",
+      "read": false
+    },
+    {
+      "id": "alt_51a9d7e1136f5bba",
+      "timestamp": 1789226734706,
+      "severity": "info",
+      "type": "security_bootstrap",
+      "message": "El Super Administrador inicial ha sido aprovisionado exitosamente. La configuración de segundo factor TOTP se requerirá en el primer inicio de sesión.",
+      "read": false
+    }
+  ],
   "settings": {
     "adsEnabled": true,
     "maintenanceMode": false,
@@ -2041,6 +2183,114 @@
     "updatedAt": 1789168765704
   },
   "changeRequests": [
+    {
+      "id": "crq_1789226748832_0bd0b2aa",
+      "requestedBy": {
+        "id": "usr_test_admin_1789226747987",
+        "name": "Admin Tester",
+        "email": "admintester@tools.local",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
+      },
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "riskLevel": "critical",
+      "reason": "Prueba de expiración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "expired",
+      "createdAt": 1789226748832,
+      "expiresAt": 1789226689091
+    },
+    {
+      "id": "crq_1789226748486_96a4b1bc",
+      "requestedBy": {
+        "id": "usr_test_admin_1789226747987",
+        "name": "Admin Tester",
+        "email": "admintester@tools.local",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789226748486,
+      "expiresAt": 1789313148486,
+      "reviewedBy": {
+        "id": "usr_super_0baab9f350678b8e",
+        "name": "Concurrent Admin A",
+        "email": "admin_a@concurrent.test",
+        "reviewedAt": 1789226748604
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789226748452_91b4f5e5",
+      "requestedBy": {
+        "id": "usr_test_admin_1789226747987",
+        "name": "Admin Tester",
+        "email": "admintester@tools.local",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789226748442",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "4126994fe4c5b0aea1c14af8aa1c51aadfc587bbb8163fd780fd2f2cc8ce8947",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789226748452,
+      "expiresAt": 1789313148452,
+      "reviewedBy": {
+        "id": "usr_super_0baab9f350678b8e",
+        "name": "Concurrent Admin A",
+        "email": "admin_a@concurrent.test",
+        "reviewedAt": 1789226748701
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789226748718,
+      "executedBy": {
+        "id": "usr_test_admin_1789226747987",
+        "email": "admintester@tools.local",
+        "executedAt": 1789226748718
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789226748815,
+      "rollbackBy": {
+        "id": "usr_super_0baab9f350678b8e",
+        "email": "admin_a@concurrent.test"
+      }
+    },
     {
       "id": "crq_1789178572084_854c8edd",
       "requestedBy": {
@@ -2258,6 +2508,201 @@
       }
     },
     {
+      "id": "crq_1789172211505_c432b22e",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172211503",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "cae51d2ba24c6bc80feefd3a72dbf409a749a733a1efc11edb1c5f10288cb777",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172211505,
+      "expiresAt": 1789258611505,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172211678
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172211697,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172211697
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172211780,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789172193974_add781d3",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172193971",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "03edda305c3bc13c78ca7364a5cf6e0773f099244dac27e4b0211f299af18b91",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172193974,
+      "expiresAt": 1789258593974,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172194150
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172194159,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172194159
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172194238,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789172167423_8d0611cf",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172167420",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "20912cf8a16e8017e3b19a2c87000eb866c2beb3acbdbbb67a730047ea4e9385",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172167423,
+      "expiresAt": 1789258567423,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172167599
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172167609,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172167609
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172167689,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789173069795_db68af9a",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789173069795,
+      "expiresAt": 1789259469795,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789173069875
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
       "id": "crq_1789171992198_710d27de",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
@@ -2336,7 +2781,7 @@
       "expiresAt": 1789258580046
     },
     {
-      "id": "crq_1789172229458_4f58dd1c",
+      "id": "crq_1789172167698_63668c25",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
         "name": "Admin Auditor",
@@ -2347,51 +2792,19 @@
       "actionLabel": "Modificar Configuración del Sistema / Producción",
       "targetResource": "system/settings",
       "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172229456",
-        "reason": "Ajuste de producción solicitado por administración"
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
       },
-      "paramsHash": "131a678a3fb32529aa7681a6905a9d74a42627bcd8836de3ebfa9b16da8c625d",
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
       "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
+      "reason": "Prueba de expiración",
       "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172229458,
-      "expiresAt": 1789258629458,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172229633
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172229642,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172229642
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172229724,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
+      "status": "pending",
+      "createdAt": 1789172167698,
+      "expiresAt": 1789258567698
     },
     {
-      "id": "crq_1789172338780_f5bbacac",
+      "id": "crq_1789172257496_125c0b88",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
         "name": "Admin Auditor",
@@ -2402,23 +2815,39 @@
       "actionLabel": "Modificar Configuración del Sistema / Producción",
       "targetResource": "system/settings",
       "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
       },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
       "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
+      "reason": "Prueba de expiración",
       "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789172338780,
-      "expiresAt": 1789258738780,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172338856
+      "status": "expired",
+      "createdAt": 1789172257496,
+      "expiresAt": 1789172197750
+    },
+    {
+      "id": "crq_1789172211789_bc4dcc84",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
       },
-      "reviewNotes": "Rechazada por Super Administrador."
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
+      },
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "riskLevel": "critical",
+      "reason": "Prueba de expiración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "pending",
+      "createdAt": 1789172211789,
+      "expiresAt": 1789258611789
     },
     {
       "id": "crq_1789175041415_afbc32f4",
@@ -2444,66 +2873,6 @@
       "expiresAt": 1789174981674
     },
     {
-      "id": "crq_1789175041048_6ac83247",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789175041048,
-      "expiresAt": 1789261441048,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789175041167
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789172167432_c1c982b0",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789172167432,
-      "expiresAt": 1789258567432,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172167510
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
       "id": "crq_1789172194246_a81bc5c6",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
@@ -2527,175 +2896,7 @@
       "expiresAt": 1789258594246
     },
     {
-      "id": "crq_1789172257237_d7fb2767",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172257234",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "8c0d41d6d8a1208e44966286f768bf120ed9b09a713b97bbbd36881a38c56c65",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172257237,
-      "expiresAt": 1789258657237,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172257400
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172257408,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172257408
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172257488,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
-      "id": "crq_1789175013433_4cdbb681",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789175013433,
-      "expiresAt": 1789261413433,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789175013568
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789173069795_db68af9a",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789173069795,
-      "expiresAt": 1789259469795,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789173069875
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "cr_test_expired_1789172128864",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "update_system_settings",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true
-      },
-      "paramsHash": "fake_hash",
-      "riskLevel": "critical",
-      "reason": "Prueba expiración",
-      "potentialConsequences": "Impacto del cambio",
-      "status": "approved",
-      "createdAt": 1789168528864,
-      "expiresAt": 1789172068864,
-      "authorizationTokenHash": "some_hash"
-    },
-    {
-      "id": "crq_1789172179796_39a7c77c",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789172179796,
-      "expiresAt": 1789258579796,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172179871
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789172229732_76ecf468",
+      "id": "crq_1789173070065_390d40d3",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
         "name": "Admin Auditor",
@@ -2714,11 +2915,11 @@
       "reason": "Prueba de expiración",
       "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
       "status": "expired",
-      "createdAt": 1789172229732,
-      "expiresAt": 1789172169984
+      "createdAt": 1789173070065,
+      "expiresAt": 1789173010318
     },
     {
-      "id": "crq_1789172211789_bc4dcc84",
+      "id": "crq_1789172229466_261b21a8",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
         "name": "Admin Auditor",
@@ -2729,16 +2930,23 @@
       "actionLabel": "Modificar Configuración del Sistema / Producción",
       "targetResource": "system/settings",
       "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
       },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
       "riskLevel": "critical",
-      "reason": "Prueba de expiración",
+      "reason": "Solicitud para probar rechazo",
       "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "pending",
-      "createdAt": 1789172211789,
-      "expiresAt": 1789258611789
+      "status": "rejected",
+      "createdAt": 1789172229466,
+      "expiresAt": 1789258629466,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172229550
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
     },
     {
       "id": "crq_1789172338772_b43160ad",
@@ -2796,116 +3004,6 @@
       }
     },
     {
-      "id": "crq_1789172179787_cee6424d",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172179783",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "ca754effc1a66a763d505ce24803d0d847aa5089596e3a72c3edcd0d9d3ba4e2",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172179787,
-      "expiresAt": 1789258579787,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172179949
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172179958,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172179958
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172180038,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
-      "id": "crq_1789172167423_8d0611cf",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172167420",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "20912cf8a16e8017e3b19a2c87000eb866c2beb3acbdbbb67a730047ea4e9385",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172167423,
-      "expiresAt": 1789258567423,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172167599
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172167609,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172167609
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172167689,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
       "id": "crq_1789172193983_e770e1d9",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
@@ -2932,6 +3030,307 @@
         "name": "Super Admin (Yocar)",
         "email": "yoscarelduro05@gmail.com",
         "reviewedAt": 1789172194059
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "cr_test_expired_1789172128864",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "update_system_settings",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true
+      },
+      "paramsHash": "fake_hash",
+      "riskLevel": "critical",
+      "reason": "Prueba expiración",
+      "potentialConsequences": "Impacto del cambio",
+      "status": "approved",
+      "createdAt": 1789168528864,
+      "expiresAt": 1789172068864,
+      "authorizationTokenHash": "some_hash"
+    },
+    {
+      "id": "crq_1789171992207_d45c4670",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789171992207,
+      "expiresAt": 1789258392207,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789171992282
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789172339035_dd62cb89",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
+      },
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "riskLevel": "critical",
+      "reason": "Prueba de expiración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "expired",
+      "createdAt": 1789172339035,
+      "expiresAt": 1789172279288
+    },
+    {
+      "id": "crq_1789175013358_da7aeba3",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789175013351",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "08b4a5156b2a6043b11afe51154fa0c5c5488f201c4371fdf81d6bb694cc9cd2",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789175013358,
+      "expiresAt": 1789261413358,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789175013762
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789175013774,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789175013774
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789175013871,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789172229458_4f58dd1c",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172229456",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "131a678a3fb32529aa7681a6905a9d74a42627bcd8836de3ebfa9b16da8c625d",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172229458,
+      "expiresAt": 1789258629458,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172229633
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172229642,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172229642
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172229724,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789172257237_d7fb2767",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172257234",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "8c0d41d6d8a1208e44966286f768bf120ed9b09a713b97bbbd36881a38c56c65",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172257237,
+      "expiresAt": 1789258657237,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172257400
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172257408,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172257408
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172257488,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789172179796_39a7c77c",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789172179796,
+      "expiresAt": 1789258579796,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172179871
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789175041048_6ac83247",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789175041048,
+      "expiresAt": 1789261441048,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789175041167
       },
       "reviewNotes": "Rechazada por Super Administrador."
     },
@@ -2991,6 +3390,227 @@
       }
     },
     {
+      "id": "crq_1789172211515_68591d4e",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789172211515,
+      "expiresAt": 1789258611515,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172211593
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789172179787_cee6424d",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": false,
+        "bannerEnabled": true,
+        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172179783",
+        "reason": "Ajuste de producción solicitado por administración"
+      },
+      "paramsHash": "ca754effc1a66a763d505ce24803d0d847aa5089596e3a72c3edcd0d9d3ba4e2",
+      "riskLevel": "critical",
+      "reason": "Ajuste de producción solicitado por administración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rolled_back",
+      "createdAt": 1789172179787,
+      "expiresAt": 1789258579787,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172179949
+      },
+      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
+      "usedAt": 1789172179958,
+      "executedBy": {
+        "id": "usr_1789170848810_7avka",
+        "email": "admin_1789170848736@toolboxword.com",
+        "executedAt": 1789172179958
+      },
+      "checkpointData": {
+        "settings": {
+          "adsEnabled": true,
+          "maintenanceMode": false,
+          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
+          "bannerEnabled": false,
+          "sessionTimeoutMinutes": 120,
+          "maxLoginAttempts": 5,
+          "lockoutMinutes": 15,
+          "updatedAt": 1789168765704
+        }
+      },
+      "rollbackAt": 1789172180038,
+      "rollbackBy": {
+        "id": "usr_super_admin_root",
+        "email": "yoscarelduro05@gmail.com"
+      }
+    },
+    {
+      "id": "crq_1789175013883_31bbb57d",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
+      },
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "riskLevel": "critical",
+      "reason": "Prueba de expiración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "pending",
+      "createdAt": 1789175013883,
+      "expiresAt": 1789261413883
+    },
+    {
+      "id": "crq_1789172229732_76ecf468",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "globalBannerText": "Texto a expirar",
+        "reason": "Prueba de expiración"
+      },
+      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
+      "riskLevel": "critical",
+      "reason": "Prueba de expiración",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "expired",
+      "createdAt": 1789172229732,
+      "expiresAt": 1789172169984
+    },
+    {
+      "id": "crq_1789172257245_b043f018",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789172257245,
+      "expiresAt": 1789258657245,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172257320
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789175013433_4cdbb681",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789175013433,
+      "expiresAt": 1789261413433,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789175013568
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
+      "id": "crq_1789172338780_f5bbacac",
+      "requestedBy": {
+        "id": "usr_1789170848810_7avka",
+        "name": "Admin Auditor",
+        "email": "admin_1789170848736@toolboxword.com",
+        "role": "admin"
+      },
+      "action": "update_system_settings",
+      "actionLabel": "Modificar Configuración del Sistema / Producción",
+      "targetResource": "system/settings",
+      "sanitizedParams": {
+        "adsEnabled": true,
+        "reason": "Solicitud para probar rechazo"
+      },
+      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
+      "riskLevel": "critical",
+      "reason": "Solicitud para probar rechazo",
+      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
+      "status": "rejected",
+      "createdAt": 1789172338780,
+      "expiresAt": 1789258738780,
+      "reviewedBy": {
+        "id": "usr_super_admin_root",
+        "name": "Super Admin (Yocar)",
+        "email": "yoscarelduro05@gmail.com",
+        "reviewedAt": 1789172338856
+      },
+      "reviewNotes": "Rechazada por Super Administrador."
+    },
+    {
       "id": "crq_1789173069785_e66a84fe",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
@@ -3046,85 +3666,7 @@
       }
     },
     {
-      "id": "crq_1789172257496_125c0b88",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
-      },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
-      "riskLevel": "critical",
-      "reason": "Prueba de expiración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "expired",
-      "createdAt": 1789172257496,
-      "expiresAt": 1789172197750
-    },
-    {
-      "id": "crq_1789175013358_da7aeba3",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789175013351",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "08b4a5156b2a6043b11afe51154fa0c5c5488f201c4371fdf81d6bb694cc9cd2",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789175013358,
-      "expiresAt": 1789261413358,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789175013762
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789175013774,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789175013774
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789175013871,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
-      "id": "crq_1789172211515_68591d4e",
+      "id": "crq_1789172167432_c1c982b0",
       "requestedBy": {
         "id": "usr_1789170848810_7avka",
         "name": "Admin Auditor",
@@ -3143,307 +3685,15 @@
       "reason": "Solicitud para probar rechazo",
       "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
       "status": "rejected",
-      "createdAt": 1789172211515,
-      "expiresAt": 1789258611515,
+      "createdAt": 1789172167432,
+      "expiresAt": 1789258567432,
       "reviewedBy": {
         "id": "usr_super_admin_root",
         "name": "Super Admin (Yocar)",
         "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172211593
+        "reviewedAt": 1789172167510
       },
       "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789172193974_add781d3",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172193971",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "03edda305c3bc13c78ca7364a5cf6e0773f099244dac27e4b0211f299af18b91",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172193974,
-      "expiresAt": 1789258593974,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172194150
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172194159,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172194159
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172194238,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
-      "id": "crq_1789172229466_261b21a8",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789172229466,
-      "expiresAt": 1789258629466,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172229550
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789171992207_d45c4670",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789171992207,
-      "expiresAt": 1789258392207,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789171992282
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789172257245_b043f018",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": true,
-        "reason": "Solicitud para probar rechazo"
-      },
-      "paramsHash": "fb4f31d887ee299729fd8f796e10d2cdee271c3320d5ec3720fdd4ae21f68c19",
-      "riskLevel": "critical",
-      "reason": "Solicitud para probar rechazo",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rejected",
-      "createdAt": 1789172257245,
-      "expiresAt": 1789258657245,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172257320
-      },
-      "reviewNotes": "Rechazada por Super Administrador."
-    },
-    {
-      "id": "crq_1789172167698_63668c25",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
-      },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
-      "riskLevel": "critical",
-      "reason": "Prueba de expiración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "pending",
-      "createdAt": 1789172167698,
-      "expiresAt": 1789258567698
-    },
-    {
-      "id": "crq_1789172339035_dd62cb89",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
-      },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
-      "riskLevel": "critical",
-      "reason": "Prueba de expiración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "expired",
-      "createdAt": 1789172339035,
-      "expiresAt": 1789172279288
-    },
-    {
-      "id": "crq_1789175013883_31bbb57d",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
-      },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
-      "riskLevel": "critical",
-      "reason": "Prueba de expiración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "pending",
-      "createdAt": 1789175013883,
-      "expiresAt": 1789261413883
-    },
-    {
-      "id": "crq_1789172211505_c432b22e",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "adsEnabled": false,
-        "bannerEnabled": true,
-        "globalBannerText": "Mantenimiento Preventivo Autorizado 1789172211503",
-        "reason": "Ajuste de producción solicitado por administración"
-      },
-      "paramsHash": "cae51d2ba24c6bc80feefd3a72dbf409a749a733a1efc11edb1c5f10288cb777",
-      "riskLevel": "critical",
-      "reason": "Ajuste de producción solicitado por administración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "rolled_back",
-      "createdAt": 1789172211505,
-      "expiresAt": 1789258611505,
-      "reviewedBy": {
-        "id": "usr_super_admin_root",
-        "name": "Super Admin (Yocar)",
-        "email": "yoscarelduro05@gmail.com",
-        "reviewedAt": 1789172211678
-      },
-      "reviewNotes": "Aprobado tras revisión de mantenimiento preventivo.",
-      "usedAt": 1789172211697,
-      "executedBy": {
-        "id": "usr_1789170848810_7avka",
-        "email": "admin_1789170848736@toolboxword.com",
-        "executedAt": 1789172211697
-      },
-      "checkpointData": {
-        "settings": {
-          "adsEnabled": true,
-          "maintenanceMode": false,
-          "globalBannerText": "Nueva actualización: 20 herramientas disponibles 100% privadas.",
-          "bannerEnabled": false,
-          "sessionTimeoutMinutes": 120,
-          "maxLoginAttempts": 5,
-          "lockoutMinutes": 15,
-          "updatedAt": 1789168765704
-        }
-      },
-      "rollbackAt": 1789172211780,
-      "rollbackBy": {
-        "id": "usr_super_admin_root",
-        "email": "yoscarelduro05@gmail.com"
-      }
-    },
-    {
-      "id": "crq_1789173070065_390d40d3",
-      "requestedBy": {
-        "id": "usr_1789170848810_7avka",
-        "name": "Admin Auditor",
-        "email": "admin_1789170848736@toolboxword.com",
-        "role": "admin"
-      },
-      "action": "update_system_settings",
-      "actionLabel": "Modificar Configuración del Sistema / Producción",
-      "targetResource": "system/settings",
-      "sanitizedParams": {
-        "globalBannerText": "Texto a expirar",
-        "reason": "Prueba de expiración"
-      },
-      "paramsHash": "4e86eb8b69f3a8e4789775b6be88efaae3579abaad7e58fc2972455bed19a32e",
-      "riskLevel": "critical",
-      "reason": "Prueba de expiración",
-      "potentialConsequences": "Puede alterar límites de sesión, bloqueos de seguridad, modo de mantenimiento y comportamiento global del servidor.",
-      "status": "expired",
-      "createdAt": 1789173070065,
-      "expiresAt": 1789173010318
     }
   ]
 }

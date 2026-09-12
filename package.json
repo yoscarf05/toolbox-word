@@ -14,6 +14,7 @@
     "migrate:json2pg": "tsx scripts/migrate-json-to-pg.ts",
     "test:persistence": "tsx scripts/test-postgres-persistence.ts",
     "test:critical": "tsx scripts/test-critical-authorization.ts",
+    "test:bootstrap": "tsx scripts/test-bootstrap-protection.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

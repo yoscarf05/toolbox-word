@@ -681,6 +681,10 @@ class PostgresDatabase {
       this.isSyncing = false;
     }
   }
+
+  public getPool(): any {
+    return this.pool;
+  }
 }
 
 export const db = new PostgresDatabase();

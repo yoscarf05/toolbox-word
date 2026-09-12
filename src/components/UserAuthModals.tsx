@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Language } from '../types';
+import { safeFetchJson } from '../utils/api';
 import { TOOLS } from '../data/tools';
 import { DynamicIcon } from './DynamicIcon';
 import { 
@@ -24,7 +25,8 @@ import {
   Shield,
   Eye,
   EyeOff,
-  Key
+  Key,
+  Sparkles
 } from 'lucide-react';
 
 interface UserAuthModalsProps {
@@ -56,13 +58,17 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
   } = useAuth();
 
   // Auth Modal State
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot' | 'reset' | 'bootstrap'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Bootstrap (One-Time Super Admin Setup) State
+  const [needsBootstrap, setNeedsBootstrap] = useState(false);
+  const [bootstrapSuccessMsg, setBootstrapSuccessMsg] = useState('');
 
   // Password Recovery State
   const [resetToken, setResetToken] = useState('');
@@ -105,6 +111,73 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
     setPending2FA(null);
     setTotpCode('');
     setIsSubmitting(false);
+  };
+
+  // Check if system requires initial super admin bootstrap
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      safeFetchJson<{ needsBootstrap: boolean }>('/api/auth/bootstrap-status')
+        .then((res) => {
+          if (res.ok && res.data?.needsBootstrap) {
+            setNeedsBootstrap(true);
+          } else {
+            setNeedsBootstrap(false);
+          }
+        })
+        .catch(() => {
+          setNeedsBootstrap(false);
+        });
+    }
+  }, [isAuthModalOpen]);
+
+  const handleBootstrapSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setBootstrapSuccessMsg('');
+
+    if (!name.trim()) {
+      setErrorMsg(isEs ? 'Ingresa el nombre completo del Super Administrador.' : 'Enter the Super Admin full name.');
+      return;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setErrorMsg(isEs ? 'Ingresa un correo electrónico válido.' : 'Enter a valid email address.');
+      return;
+    }
+    if (!password || password.length < 8) {
+      setErrorMsg(isEs ? 'La contraseña debe tener al menos 8 caracteres.' : 'Password must be at least 8 characters long.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await safeFetchJson<any>('/api/auth/bootstrap-first-superadmin', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password
+        })
+      });
+
+      if (!res.ok) {
+        setErrorMsg(res.message || (isEs ? 'Error durante la inicialización.' : 'Bootstrap error.'));
+      } else {
+        // Bootstrap succeeded!
+        setNeedsBootstrap(false);
+        setBootstrapSuccessMsg(
+          res.data?.message || (isEs
+            ? '¡Super Administrador inicial configurado! Por seguridad, ahora inicia sesión para activar tu 2FA TOTP.'
+            : 'Initial Super Admin created! Please log in now to set up your 2FA TOTP.')
+        );
+        // Switch to login mode
+        setAuthMode('login');
+        setPassword('');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || (isEs ? 'Error de conexión.' : 'Connection error.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseAuth = () => {
@@ -277,6 +350,8 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     {pending2FA
                       ? (isEs ? 'Autenticación en Dos Pasos (2FA)' : 'Two-Factor Authentication')
+                      : authMode === 'bootstrap'
+                      ? (isEs ? 'Configuración Inicial de Super Admin' : 'Initial Super Admin Setup')
                       : authMode === 'forgot'
                       ? (isEs ? 'Recuperar Contraseña' : 'Reset Password')
                       : authMode === 'reset'
@@ -288,6 +363,8 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {pending2FA
                       ? (isEs ? 'Verificación obligatoria de segundo factor' : 'Mandatory second factor verification')
+                      : authMode === 'bootstrap'
+                      ? (isEs ? 'Aprovisionamiento de un solo uso para la primera cuenta' : 'One-time initial provisioning of the first account')
                       : authMode === 'forgot'
                       ? (isEs ? 'Recibe instrucciones para restablecer el acceso' : 'Receive instructions to recover your account')
                       : authMode === 'reset'
@@ -643,9 +720,147 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                     </button>
                   </div>
                 </form>
+              ) : authMode === 'bootstrap' ? (
+                /* STEP B0: One-Time Super Admin Bootstrap Form */
+                <form onSubmit={handleBootstrapSubmit} className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5">
+                    <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                      <p className="font-bold">
+                        {isEs ? 'Aprovisionamiento Inicial Único' : 'One-Time Initial Setup'}
+                      </p>
+                      <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                        {isEs
+                          ? 'No existe ningún Super Administrador en el sistema. Este formulario solo se puede utilizar una vez. Al registrarse, el endpoint quedará bloqueado permanentemente.'
+                          : 'No Super Admin currently exists. This form can only be used once. Once registered, this endpoint is permanently locked.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {isEs ? 'Nombre completo' : 'Full Name'}
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={isEs ? 'Nombre del Super Administrador' : 'Super Admin Name'}
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {isEs ? 'Correo Electrónico Principal' : 'Super Admin Email'}
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="superadmin@tudominio.com"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      {isEs ? 'Contraseña Maestra (Mínimo 8 caracteres)' : 'Master Password (Min 8 chars)'}
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full pl-9 pr-10 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {errorMsg && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                      {errorMsg}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>
+                      {isSubmitting
+                        ? (isEs ? 'Inicializando Super Admin...' : 'Initializing Super Admin...')
+                        : (isEs ? 'Crear Super Administrador Único' : 'Create Initial Super Admin')}
+                    </span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode('login');
+                        setErrorMsg('');
+                      }}
+                      className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    >
+                      {isEs ? '← Cancelar e ir a Iniciar Sesión' : '← Cancel and go to Sign In'}
+                    </button>
+                  </div>
+                </form>
               ) : (
                 /* STEP B3: Standard Email + Password Form (Login & Register) */
                 <>
+                  {/* One-Time Bootstrap Notice if system has 0 super admin */}
+                  {needsBootstrap && (
+                    <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                          {isEs ? 'Sistema sin Super Administrador' : 'No Super Admin exists'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthMode('bootstrap');
+                          setErrorMsg('');
+                        }}
+                        className="py-1 px-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-xs cursor-pointer transition-colors"
+                      >
+                        {isEs ? 'Inicializar' : 'Initialize'}
+                      </button>
+                    </div>
+                  )}
+
+                  {bootstrapSuccessMsg && (
+                    <div className="p-3 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                      {bootstrapSuccessMsg}
+                    </div>
+                  )}
+
                   {/* Tab Selector (Login vs Register) */}
                   <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                     <button
