@@ -90,6 +90,8 @@ export interface RecentToolItem {
   timestamp: number;
 }
 
+export type UserRole = 'user' | 'admin' | 'super_admin';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -97,6 +99,12 @@ export interface UserProfile {
   avatar?: string;
   preferredLanguage?: Language;
   createdAt: number;
+  role?: UserRole;
+  permissions?: string[];
+  totpEnabled?: boolean;
+  status?: 'active' | 'blocked';
+  isSuperAdmin?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface UserFavorites {

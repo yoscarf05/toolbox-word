@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, UserHistoryItem, Language } from '../types';
+import { sendAnalyticsEvent, startAnalyticsHeartbeat } from '../utils/analytics';
 
 export interface SavedCitationItem {
   id: string;
@@ -13,11 +14,29 @@ export interface SavedCitationItem {
   timestamp: number;
 }
 
+export interface LoginResult {
+  success: boolean;
+  requires2FA?: boolean;
+  setup2FA?: boolean;
+  tempToken?: string;
+  qrCodeDataUrl?: string;
+  secret?: string;
+  recoveryCodes?: string[];
+  message?: string;
+  error?: string;
+}
+
 interface AuthContextType {
   user: UserProfile | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: (name: string, email: string) => void;
-  logout: () => void;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<LoginResult>;
+  verify2FA: (tempToken: string, code: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => void;
   // Dynamic Greeting
   getGreeting: (lang: Language) => { greeting: string; subtext: string };
@@ -41,20 +60,22 @@ interface AuthContextType {
   setIsAuthModalOpen: (open: boolean) => void;
   isProfileModalOpen: boolean;
   setIsProfileModalOpen: (open: boolean) => void;
+  // Refresh user profile from server
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // User state
-  const [user, setUser] = useState<UserProfile | null>(() => {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
     try {
-      const saved = localStorage.getItem('toolbox_user');
-      return saved ? JSON.parse(saved) : null;
+      return localStorage.getItem('toolbox_token');
     } catch {
       return null;
     }
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   // Favorites
   const [favoriteTools, setFavoriteTools] = useState<string[]>(() => {
@@ -99,15 +120,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Sync to localStorage
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('toolbox_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('toolbox_user');
-    }
-  }, [user]);
+  // Check current server session on mount
+  const checkSession = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const headers: Record<string, string> = {};
+      const savedToken = localStorage.getItem('toolbox_token');
+      if (savedToken) {
+        headers['Authorization'] = `Bearer ${savedToken}`;
+      }
 
+      const res = await fetch('/api/auth/me', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          if (data.sessionId) {
+            setToken(data.sessionId);
+            localStorage.setItem('toolbox_token', data.sessionId);
+          }
+        } else {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem('toolbox_token');
+        }
+      } else {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('toolbox_token');
+      }
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkSession();
+    startAnalyticsHeartbeat();
+  }, [checkSession]);
+
+  // Sync state to localStorage
   useEffect(() => {
     localStorage.setItem('toolbox_fav_tools', JSON.stringify(favoriteTools));
   }, [favoriteTools]);
@@ -124,20 +178,151 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('toolbox_saved_citations', JSON.stringify(savedCitations));
   }, [savedCitations]);
 
-  const login = (name: string, email: string) => {
-    const newUser: UserProfile = {
-      id: Date.now().toString(),
-      name: name.trim() || 'Usuario',
-      email: email.trim().toLowerCase() || 'usuario@toolboxword.com',
-      createdAt: Date.now()
-    };
-    setUser(newUser);
-    setIsAuthModalOpen(false);
+  // Unified login via Email + Password
+  const login = async (email: string, password: string): Promise<LoginResult> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.message || data.error || 'Error al iniciar sesión'
+        };
+      }
+
+      // If Super Admin requires 2FA:
+      if (data.requires2FA) {
+        return {
+          success: true,
+          requires2FA: true,
+          setup2FA: data.setup2FA,
+          tempToken: data.tempToken,
+          qrCodeDataUrl: data.qrCodeDataUrl,
+          secret: data.secret,
+          recoveryCodes: data.recoveryCodes,
+          message: data.message
+        };
+      }
+
+      // Normal User or Regular Admin login completed:
+      if (data.user && data.token) {
+        setUser(data.user);
+        setToken(data.token);
+        localStorage.setItem('toolbox_token', data.token);
+        setIsAuthModalOpen(false);
+
+        sendAnalyticsEvent({
+          type: 'login',
+          details: { role: data.user.role }
+        });
+
+        return { success: true };
+      }
+
+      return { success: false, error: 'Respuesta inesperada del servidor.' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión con el servidor.' };
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsProfileModalOpen(false);
+  // Verify TOTP 2FA for Super Admin
+  const verify2FA = async (tempToken: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/verify-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempToken, code })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.message || data.error || 'Código incorrecto'
+        };
+      }
+
+      if (data.user && data.token) {
+        setUser(data.user);
+        setToken(data.token);
+        localStorage.setItem('toolbox_token', data.token);
+        setIsAuthModalOpen(false);
+
+        sendAnalyticsEvent({
+          type: 'login',
+          details: { role: 'super_admin', method: 'totp_verified' }
+        });
+
+        return { success: true };
+      }
+
+      return { success: false, error: 'Error al verificar sesión administrativa.' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión.' };
+    }
+  };
+
+  // Register standard user account
+  const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.message || data.error || 'Error al registrar la cuenta.'
+        };
+      }
+
+      if (data.user && data.token) {
+        setUser(data.user);
+        setToken(data.token);
+        localStorage.setItem('toolbox_token', data.token);
+        setIsAuthModalOpen(false);
+
+        sendAnalyticsEvent({
+          type: 'signup',
+          details: { role: 'user' }
+        });
+
+        return { success: true };
+      }
+
+      return { success: false, error: 'Respuesta inválida del servidor.' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error al conectar con el servidor.' };
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    try {
+      const savedToken = token || localStorage.getItem('toolbox_token');
+      const headers: Record<string, string> = {};
+      if (savedToken) {
+        headers['Authorization'] = `Bearer ${savedToken}`;
+      }
+      await fetch('/api/auth/logout', { method: 'POST', headers }).catch(() => {});
+    } finally {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('toolbox_token');
+      setIsProfileModalOpen(false);
+      sendAnalyticsEvent({ type: 'logout' });
+    }
   };
 
   const updateProfile = (data: Partial<UserProfile>) => {
@@ -145,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({ ...user, ...data });
   };
 
-  // Dynamic greeting matching time of day
+  // Dynamic greeting
   const getGreeting = (lang: Language): { greeting: string; subtext: string } => {
     const hour = new Date().getHours();
     const isEs = lang === 'es';
@@ -170,7 +355,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Generic polite greeting for unauthenticated guests
     return {
       greeting: isEs ? 'Bienvenido a Toolbox Word' : 'Welcome to Toolbox Word',
       subtext: isEs
@@ -180,9 +364,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const toggleFavoriteTool = (slug: string) => {
-    setFavoriteTools((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    );
+    setFavoriteTools((prev) => {
+      const isFav = prev.includes(slug);
+      const updated = isFav ? prev.filter((s) => s !== slug) : [...prev, slug];
+      sendAnalyticsEvent({
+        type: isFav ? 'favorite_removed' : 'favorite_added',
+        toolSlug: slug
+      });
+      return updated;
+    });
   };
 
   const toggleFavoriteGuide = (slug: string) => {
@@ -220,12 +410,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSavedCitations((prev) => prev.filter((c) => c.id !== id));
   };
 
+  const isSuperAdmin = !!(user && user.role === 'super_admin');
+  const isAdmin = !!(user && (user.role === 'admin' || user.role === 'super_admin'));
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
         isAuthenticated: !!user,
+        isAdmin,
+        isSuperAdmin,
+        isLoading,
         login,
+        verify2FA,
+        register,
         logout,
         updateProfile,
         getGreeting,
@@ -244,7 +443,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthModalOpen,
         setIsAuthModalOpen,
         isProfileModalOpen,
-        setIsProfileModalOpen
+        setIsProfileModalOpen,
+        refreshUser: checkSession
       }}
     >
       {children}

@@ -1,22 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Language } from '../types';
-import { TOOLS } from '../data/tools';
-import { CATEGORIES } from '../data/categories';
+import { AdminDashboard } from './admin/AdminDashboard';
+import { AdminUsers } from './admin/AdminUsers';
+import { AdminTools } from './admin/AdminTools';
+import { AdminErrors } from './admin/AdminErrors';
+import { AdminAuditLogs } from './admin/AdminAuditLogs';
+import { AdminSessions } from './admin/AdminSessions';
+import { AdminReports } from './admin/AdminReports';
+import { AdminSettings } from './admin/AdminSettings';
+import { AdminChangeRequests } from './admin/AdminChangeRequests';
 import { 
   Shield, 
-  Settings, 
-  Activity, 
-  Eye, 
-  EyeOff, 
-  Check, 
-  Database, 
-  Search, 
-  Power, 
-  DollarSign, 
-  RefreshCw, 
-  Sliders,
-  CheckCircle2,
-  AlertTriangle
+  LayoutDashboard, 
+  Users, 
+  Wrench, 
+  AlertTriangle, 
+  FileText, 
+  Laptop, 
+  FileSpreadsheet, 
+  Sliders, 
+  ArrowLeft,
+  Lock,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 
 interface AdminPageProps {
@@ -25,239 +32,250 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ lang, onNavigate }) => {
-  const [toolsList, setToolsList] = useState(
-    TOOLS.map((t) => ({ ...t, active: true }))
-  );
-  const [searchTerm, setSearchTerm] = useState('');
-  const [adsEnabled, setAdsEnabled] = useState(true);
-  const [globalBanner, setGlobalBanner] = useState(false);
-  const [bannerText, setBannerText] = useState('Nueva actualización: 20 herramientas disponibles 100% privadas.');
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const { user, isAuthenticated, isAdmin, isSuperAdmin, logout, setIsAuthModalOpen } = useAuth();
 
-  const toggleTool = (id: string) => {
-    setToolsList(
-      toolsList.map((t) => (t.id === id ? { ...t, active: !t.active } : t))
-    );
-  };
-
-  const handleSaveSettings = () => {
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
-  };
-
-  const filtered = toolsList.filter((t) => {
-    const nameStr = (t.name?.[lang] || t.name?.es || '').toLowerCase();
-    const catStr = String(t.categoryId || t.category || '').toLowerCase();
-    const q = searchTerm.toLowerCase();
-    return nameStr.includes(q) || catStr.includes(q);
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [telemetry, setTelemetry] = useState({
+    usersNow: 1,
+    users5m: 1,
+    users15m: 1,
+    ongoingConversions: 0,
+    recentErrors24h: 0,
+    totalConversions24h: 0,
+    successRate24h: 100
   });
+  const [overview, setOverview] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+
+  // Poll real-time telemetry and pending change requests from server
+  const fetchTelemetry = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/admin/telemetry', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('toolbox_token') || ''}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTelemetry(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [isAdmin]);
+
+  const fetchPendingRequestsCount = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/admin/change-requests/pending-count', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('toolbox_token') || ''}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingRequestsCount(data.pendingCount || 0);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [isAdmin]);
+
+  const fetchOverview = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/admin/overview', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('toolbox_token') || ''}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOverview(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchTelemetry();
+      fetchPendingRequestsCount();
+      fetchOverview();
+      const interval = setInterval(() => {
+        fetchTelemetry();
+        fetchPendingRequestsCount();
+      }, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin, fetchTelemetry, fetchPendingRequestsCount, fetchOverview]);
+
+  // Access Control Guard
+  if (!isAuthenticated || !isAdmin) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Acceso Restringido
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Esta sección requiere permisos administrativos autenticados.
+            </p>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={() => onNavigate('/')}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition-colors"
+            >
+              Volver al Inicio
+            </button>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-xs transition-colors"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const navTabs = [
+    { id: 'dashboard', label: 'Panel General', icon: LayoutDashboard },
+    { id: 'change-requests', label: 'Autorizaciones Críticas', icon: ShieldCheck, badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
+    { id: 'users', label: 'Usuarios y Cuentas', icon: Users },
+    { id: 'tools', label: 'Telemetría Herramientas', icon: Wrench },
+    { id: 'errors', label: 'Monitor de Errores', icon: AlertTriangle, badge: telemetry.recentErrors24h > 0 ? telemetry.recentErrors24h : undefined },
+    { id: 'audit', label: 'Registro de Auditoría', icon: FileText },
+    { id: 'sessions', label: 'Sesiones y 2FA', icon: Laptop },
+    { id: 'reports', label: 'Informes Semanales', icon: FileSpreadsheet },
+    { id: 'settings', label: 'Configuración', icon: Sliders }
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      {/* Admin Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      {/* Top Banner & User Status */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-slate-900 text-white dark:bg-blue-600">
-            <Shield className="w-6 h-6" />
+          <button
+            onClick={() => onNavigate('/')}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Volver al catálogo público"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-indigo-600 text-white flex items-center justify-center font-bold">
+            <Shield className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Panel de Administración
+              <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+                Centro de Mando Administrativo
               </h1>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">
-                Ready Architecture
-              </span>
+              {isSuperAdmin ? (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60">
+                  Super Admin (2FA) 👑
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                  Administrador
+                </span>
+              )}
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Gestión de catálogo, estado de herramientas y configuración de monetización
+            <p className="text-xs text-slate-500">
+              Conectado como <strong className="text-slate-700 dark:text-slate-300">{user?.email}</strong>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {savedSuccess && (
-            <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold">
-              <CheckCircle2 className="w-4 h-4" />
-              Guardado
-            </span>
-          )}
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleSaveSettings}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer"
+            onClick={() => onNavigate('/')}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
           >
-            Guardar Configuración
+            Ir a la Web
+          </button>
+          <button
+            onClick={logout}
+            className="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Cerrar Sesión</span>
           </button>
         </div>
       </div>
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Herramientas Activas</span>
-            <Activity className="w-4 h-4 text-emerald-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
-            {toolsList.filter((t) => t.active).length} / {toolsList.length}
-          </p>
-          <span className="text-[11px] text-slate-400 mt-1 block">100% operativas en cliente</span>
-        </div>
+      {/* Navigation Tabs Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200 dark:border-slate-800">
+        {navTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Categorías</span>
-            <Database className="w-4 h-4 text-blue-500" />
-          </div>
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
-            {CATEGORIES.length}
-          </p>
-          <span className="text-[11px] text-slate-400 mt-1 block">PDF, Imágenes, Texto, QR, Dev</span>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Estado AdSense</span>
-            <DollarSign className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`w-3 h-3 rounded-full ${adsEnabled ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {adsEnabled ? 'Activo (Google)' : 'Pausado'}
-            </p>
-          </div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Slots conformes y no intrusivos</span>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Servidores / RAM</span>
-            <Shield className="w-4 h-4 text-purple-500" />
-          </div>
-          <p className="text-xl font-bold text-slate-900 dark:text-white">
-            0 KB Cloud
-          </p>
-          <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">Zero Server Costs</span>
-        </div>
-      </div>
-
-      {/* Global Toggles and AdSense Settings */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-amber-500" />
-            <span>Monetización y Publicidad</span>
-          </h2>
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Mostrar anuncios Google AdSense</p>
-              <p className="text-[11px] text-slate-400">Slots preparados en cabecera de herramientas y home</p>
-            </div>
+          return (
             <button
-              onClick={() => setAdsEnabled(!adsEnabled)}
-              className={`p-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                adsEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700'
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              {adsEnabled ? 'Activado' : 'Desactivado'}
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              {tab.badge !== undefined && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                  isActive ? 'bg-white text-blue-600' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                }`}>
+                  {tab.badge}
+                </span>
+              )}
             </button>
-          </div>
-        </div>
-
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-blue-500" />
-            <span>Avisos Globales</span>
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Mostrar barra de anuncio superior:</span>
-              <input
-                type="checkbox"
-                checked={globalBanner}
-                onChange={(e) => setGlobalBanner(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-              />
-            </div>
-            <input
-              type="text"
-              value={bannerText}
-              onChange={(e) => setBannerText(e.target.value)}
-              disabled={!globalBanner}
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium disabled:opacity-50"
-            />
-          </div>
-        </div>
+          );
+        })}
       </div>
 
-      {/* Tools Catalog Management Table */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Inventario de Herramientas ({filtered.length})
-          </h2>
+      {/* Active Tab View */}
+      <div>
+        {activeTab === 'dashboard' && (
+          <AdminDashboard
+            telemetry={telemetry}
+            overview={overview}
+            isLoading={isLoading}
+            onRefresh={() => {
+              fetchTelemetry();
+              fetchOverview();
+            }}
+            onNavigateTab={(tabId) => setActiveTab(tabId)}
+          />
+        )}
 
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Filtrar por nombre o categoría..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-            />
-          </div>
-        </div>
+        {activeTab === 'change-requests' && <AdminChangeRequests />}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold">
-                <th className="py-3 px-3">Herramienta</th>
-                <th className="py-3 px-3">Categoría</th>
-                <th className="py-3 px-3">Insignia</th>
-                <th className="py-3 px-3">Tipo Procesamiento</th>
-                <th className="py-3 px-3 text-right">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filtered.map((tool) => (
-                <tr key={tool.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                    {tool.name?.[lang] || tool.name?.es}
-                  </td>
-                  <td className="py-3 px-3 capitalize text-slate-600 dark:text-slate-400">
-                    {tool.categoryId || tool.category}
-                  </td>
-                  <td className="py-3 px-3">
-                    {tool.badge ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950 text-amber-600 border border-amber-200 dark:border-amber-800">
-                        {tool.badge}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-3 text-slate-500 font-mono text-[11px]">
-                    Navegador (RAM)
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={() => toggleTool(tool.id)}
-                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
-                        tool.active
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-rose-50 text-rose-700 border border-rose-200'
-                      }`}
-                    >
-                      {tool.active ? 'Activa' : 'Pausada'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {activeTab === 'users' && <AdminUsers />}
+
+        {activeTab === 'tools' && <AdminTools />}
+
+        {activeTab === 'errors' && <AdminErrors />}
+
+        {activeTab === 'audit' && <AdminAuditLogs />}
+
+        {activeTab === 'sessions' && <AdminSessions />}
+
+        {activeTab === 'reports' && <AdminReports />}
+
+        {activeTab === 'settings' && <AdminSettings />}
       </div>
     </div>
   );

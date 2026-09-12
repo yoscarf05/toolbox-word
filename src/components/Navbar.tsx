@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
 
-  const { user, setIsAuthModalOpen, setIsProfileModalOpen, favoriteTools } = useAuth();
+  const { user, isAdmin, isSuperAdmin, setIsAuthModalOpen, setIsProfileModalOpen, favoriteTools } = useAuth();
 
   const langRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
@@ -318,15 +318,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Admin trigger */}
-            <button
-              onClick={onOpenAdmin}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title={getTranslation(currentLang, 'adminAccess')}
-              aria-label={getTranslation(currentLang, 'adminAccess')}
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+            {/* Admin trigger - Strictly visible only when authenticated as Admin or Super Admin */}
+            {isAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 ${
+                  isSuperAdmin
+                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title={isSuperAdmin ? 'Panel de Super Administrador' : getTranslation(currentLang, 'adminAccess')}
+                aria-label={getTranslation(currentLang, 'adminAccess')}
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden lg:inline text-xs font-bold">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
+              </button>
+            )}
 
             {/* Mobile Menu Button (touch friendly >= 44px) */}
             <button

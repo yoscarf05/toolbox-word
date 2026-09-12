@@ -1,6 +1,10 @@
 /**
  * Advanced Layout Detector for PDF Documents
- * Detects cover pages, columns, tables, formulas, lists, and hierarchy.
+ * Spatial-aware document layout analysis:
+ * - Zone-based multi-column segregation (Top full-width, 2-column body, Bottom full-width)
+ * - Robust cover page identification (language-independent)
+ * - Table clustering and alignment
+ * - Lists, headings, formulas, and spatial element interleaving
  */
 
 import type {
@@ -13,9 +17,11 @@ import type {
   TextRunItem,
   MultiColumnElementData,
   ColumnData,
+  ImageElementData,
+  DiagramElementData,
 } from './types.ts';
 
-interface RawItem {
+export interface RawItem {
   str: string;
   x: number;
   y: number; // pt from top
@@ -35,18 +41,31 @@ export interface RawPageData {
   items: RawItem[];
 }
 
+export function rawItemToRun(it: RawItem): TextRunItem {
+  return {
+    text: it.str,
+    style: {
+      fontName: it.fontName,
+      fontSize: it.fontSize,
+      bold: it.bold,
+      italic: it.italic,
+      colorHex: it.colorHex || '1E293B',
+    },
+    x: it.x,
+    y: it.y,
+    width: it.width,
+    height: it.height,
+  };
+}
+
 /**
  * Checks if text contains common mathematical / scientific symbols
  */
 export function isMathExpression(text: string): boolean {
   const trimmed = text.trim();
   if (trimmed.length < 2) return false;
-
-  // Obvious math symbols
   const mathSymbols = /[=∫∑√±×÷∂∇λπθαβγσεω≈≠≤≥∞]/;
-  // Patterns like E = mc^2 or f(x) = ... or x_1 + x_2
   const equationPattern = /^[A-Za-z0-9\s()_+*/^-]+=[A-Za-z0-9\s()_+*/^-]+$/;
-
   return mathSymbols.test(trimmed) || (equationPattern.test(trimmed) && trimmed.includes('='));
 }
 
@@ -65,48 +84,41 @@ export function isNumberedListItem(text: string): boolean {
 }
 
 /**
- * Detects if the first page qualifies as a dedicated Cover Page (Portada)
+ * Robust, language-independent cover page detection
  */
-export function detectCoverPage(rawPage: RawPageData): boolean {
-  if (rawPage.pageNumber !== 1 || rawPage.items.length === 0) return false;
+export function detectCoverPage(rawPage: RawPageData, hasLargeImage: boolean = false): boolean {
+  if (rawPage.pageNumber !== 1) return false;
+  if (rawPage.items.length === 0 && !hasLargeImage) return false;
 
   const fontSizes = rawPage.items.map((i) => i.fontSize);
-  const maxFontSize = Math.max(...fontSizes);
-  const totalWords = rawPage.items.reduce((acc, it) => acc + it.str.trim().split(/\s+/).length, 0);
+  const maxFontSize = fontSizes.length > 0 ? Math.max(...fontSizes) : 0;
+  const totalWords = rawPage.items.reduce((acc, it) => acc + it.str.trim().split(/\s+/).filter(Boolean).length, 0);
 
+  // Content pages with explicit multi-section outlines (1.1, 1.2, Chapter 2) are not covers
   const allText = rawPage.items.map((it) => it.str).join(' ').toLowerCase();
-
-  // Content pages with section markers are NOT cover pages
-  if (
-    allText.includes('sección') ||
-    allText.includes('seccion') ||
-    allText.includes('subsección') ||
-    allText.includes('subseccion') ||
-    allText.includes('capítulo') ||
-    allText.includes('capitulo') ||
-    /\b(1\.1|1\.2|2\.1)\b/.test(allText)
-  ) {
+  if (/\b(1\.1|1\.2|2\.1|2\.2|3\.1)\b/.test(allText)) {
     return false;
   }
 
-  // Cover pages typically have:
-  // 1. Very prominent title (>= 22pt)
-  // 2. Low word count (< 140 words)
-  // 3. Cover-related metadata (author, university, thesis, project, date, etc.)
-  const hasCoverTitle = maxFontSize >= 22;
-  const isSparse = totalWords < 140;
-  const hasCoverKeywords =
-    /autor|universidad|facultad|departamento|director|tesis|proyecto|instituto|septiembre|octubre|noviembre|diciembre|enero|febrero|marzo|abril|mayo|junio|julio|agosto|202[0-9]|author|university/i.test(
-      allText
-    );
+  // A cover page typically has:
+  // 1. Prominent title (font size >= 20pt) AND sparse body text (< 160 words)
+  // OR 2. Very low word count (< 80 words) with a large graphic/illustration
+  // OR 3. Clear title-centered layout with author/date metadata
+  if (maxFontSize >= 20 && totalWords < 180) {
+    return true;
+  }
 
-  return hasCoverTitle && isSparse && hasCoverKeywords;
+  if (hasLargeImage && totalWords < 100) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
- * Groups raw text items on a page into horizontal lines
+ * Groups raw text items into horizontal lines (within a specific bounding region or column)
  */
-function groupItemsIntoLines(items: RawItem[]): { y: number; items: RawItem[] }[] {
+export function groupItemsIntoLines(items: RawItem[]): { y: number; items: RawItem[] }[] {
   if (items.length === 0) return [];
 
   // Sort primarily by Y ascending, secondarily by X ascending
@@ -137,75 +149,63 @@ function groupItemsIntoLines(items: RawItem[]): { y: number; items: RawItem[] }[
 }
 
 /**
- * Detects multi-column layout on a page.
- * Returns column boundaries if page has 2 or 3 distinct vertical columns with a gutter.
+ * Detects whether a page region has a 2-column layout with a vertical gutter
  */
-export function detectColumns(
+export function detectColumnGutter(
   items: RawItem[],
   pageWidth: number,
-  margin: number
-): { isMultiColumn: boolean; columnCount: number; gutters: number[] } {
-  if (items.length < 15) {
-    return { isMultiColumn: false, columnCount: 1, gutters: [] };
+  margin: number = 40
+): { isMultiColumn: boolean; gutterX: number; gutterWidth: number } {
+  if (items.length < 20) {
+    return { isMultiColumn: false, gutterX: 0, gutterWidth: 0 };
   }
 
-  const printableWidth = pageWidth - margin * 2;
-  const bucketSize = 10; // 10pt bins
+  const bucketSize = 8;
   const numBuckets = Math.ceil(pageWidth / bucketSize);
   const histogram = new Array(numBuckets).fill(0);
 
-  // Populate horizontal text coverage histogram
   for (const item of items) {
-    const startBucket = Math.max(0, Math.floor(item.x / bucketSize));
-    const endBucket = Math.min(numBuckets - 1, Math.floor((item.x + item.width) / bucketSize));
-    for (let b = startBucket; b <= endBucket; b++) {
+    const startB = Math.max(0, Math.floor(item.x / bucketSize));
+    const endB = Math.min(numBuckets - 1, Math.floor((item.x + item.width) / bucketSize));
+    for (let b = startB; b <= endB; b++) {
       histogram[b]++;
     }
   }
 
-  // Find gutters: regions in the middle of printable area with very low text count
-  const minGutterWidth = 20; // 20pt gap
-  const centerMin = margin + printableWidth * 0.35;
-  const centerMax = margin + printableWidth * 0.65;
+  // Look for gutter in the central zone (35% to 65% of page width)
+  const centerMin = Math.floor((pageWidth * 0.35) / bucketSize);
+  const centerMax = Math.floor((pageWidth * 0.65) / bucketSize);
 
-  let gutterStart: number | null = null;
-  let maxGutter: { x: number; width: number } | null = null;
+  let bestGutterStart = -1;
+  let bestGutterWidth = 0;
+  let currentStart = -1;
 
-  for (let x = Math.floor(centerMin); x <= Math.floor(centerMax); x += bucketSize) {
-    const b = Math.floor(x / bucketSize);
-    const count = histogram[b] || 0;
-
-    // A gutter has minimal or zero text items
-    if (count <= 1) {
-      if (gutterStart === null) gutterStart = x;
+  for (let b = centerMin; b <= centerMax; b++) {
+    if (histogram[b] <= 1) {
+      if (currentStart === -1) currentStart = b;
     } else {
-      if (gutterStart !== null) {
-        const width = x - gutterStart;
-        if (width >= minGutterWidth) {
-          if (!maxGutter || width > maxGutter.width) {
-            maxGutter = { x: gutterStart + width / 2, width };
-          }
+      if (currentStart !== -1) {
+        const width = (b - currentStart) * bucketSize;
+        if (width > bestGutterWidth) {
+          bestGutterWidth = width;
+          bestGutterStart = currentStart * bucketSize;
         }
-        gutterStart = null;
+        currentStart = -1;
       }
     }
   }
 
-  if (maxGutter) {
-    // Verify both sides have significant text
-    const leftItems = items.filter((it) => it.x + it.width <= maxGutter!.x);
-    const rightItems = items.filter((it) => it.x >= maxGutter!.x);
+  if (bestGutterWidth >= 16) {
+    const gutterCenter = bestGutterStart + bestGutterWidth / 2;
+    const leftItems = items.filter((it) => it.x + it.width <= gutterCenter);
+    const rightItems = items.filter((it) => it.x >= gutterCenter);
 
     if (leftItems.length > 8 && rightItems.length > 8) {
-      return {
-        isMultiColumn: true,
-        columnCount: 2,
-        gutters: [maxGutter.x],
-      };
+      return { isMultiColumn: true, gutterX: gutterCenter, gutterWidth: bestGutterWidth };
     }
   }
 
-  return { isMultiColumn: false, columnCount: 1, gutters: [] };
+  return { isMultiColumn: false, gutterX: 0, gutterWidth: 0 };
 }
 
 /**
@@ -217,16 +217,13 @@ function detectTableFromLines(
 ): { table: TableElementData; consumedCount: number } | null {
   if (startIndex >= lines.length - 1) return null;
 
-  // A table row must have 2 or more distinct horizontally separated cells
   const candidateRows: { y: number; cells: { text: string; x: number; width: number; runs: TextRunItem[] }[] }[] = [];
 
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i];
-    // Filter meaningful items
     const lineItems = line.items.filter((it) => it.str.trim().length > 0);
     if (lineItems.length < 2) break;
 
-    // Cluster items into cells based on distance
     const cells: { text: string; x: number; width: number; runs: TextRunItem[] }[] = [];
     let curCell = {
       text: lineItems[0].str,
@@ -239,8 +236,7 @@ function detectTableFromLines(
       const item = lineItems[c];
       const gap = item.x - (curCell.x + curCell.width);
 
-      // If gap is significant (> 18pt), start a new cell
-      if (gap > 18) {
+      if (gap > 16) {
         cells.push(curCell);
         curCell = {
           text: item.str,
@@ -256,7 +252,6 @@ function detectTableFromLines(
     }
     cells.push(curCell);
 
-    // If this row has at least 2 distinct cells, add it
     if (cells.length >= 2) {
       candidateRows.push({ y: line.y, cells });
     } else {
@@ -264,130 +259,37 @@ function detectTableFromLines(
     }
   }
 
-  // Require at least 2 consecutive rows to form a real table
-  if (candidateRows.length < 2) return null;
-
-  // Determine uniform column count (use max or mode)
-  const colCount = Math.max(...candidateRows.map((r) => r.cells.length));
-  if (colCount < 2) return null;
-
-  const rows: TableRowData[] = candidateRows.map((r, rIdx) => {
-    const tableCells: TableCellData[] = r.cells.map((c) => ({
-      text: c.text,
-      runs: c.runs,
+  // Must have at least 2 aligned rows to form a true table
+  if (candidateRows.length >= 2) {
+    const maxCols = Math.max(...candidateRows.map((r) => r.cells.length));
+    const rows: TableRowData[] = candidateRows.map((r, rIdx) => ({
       isHeader: rIdx === 0,
-      align: isNumeric(c.text) ? 'right' : 'left',
+      cells: r.cells.map((c) => ({
+        text: c.text.trim(),
+        runs: c.runs,
+        isHeader: rIdx === 0,
+        align: 'left',
+      })),
     }));
 
-    // Pad if shorter than colCount
-    while (tableCells.length < colCount) {
-      tableCells.push({ text: '', runs: [] });
-    }
+    const columnWidthsPct = new Array(maxCols).fill(Math.round(100 / maxCols));
 
     return {
-      isHeader: rIdx === 0,
-      cells: tableCells,
-    };
-  });
-
-  const pctPerCol = Math.floor(100 / colCount);
-  const columnWidthsPct = new Array(colCount).fill(pctPerCol);
-
-  return {
-    table: {
-      rows,
-      columnCount: colCount,
-      columnWidthsPct,
-      hasBorders: true,
-    },
-    consumedCount: candidateRows.length,
-  };
-}
-
-function isNumeric(str: string): boolean {
-  const clean = str.replace(/[$,.%€£\-\s]/g, '');
-  return clean.length > 0 && !isNaN(Number(clean));
-}
-
-function rawItemToRun(item: RawItem): TextRunItem {
-  return {
-    text: item.str,
-    x: item.x,
-    y: item.y,
-    width: item.width,
-    height: item.height,
-    style: {
-      fontSize: item.fontSize,
-      fontName: item.fontName,
-      bold: item.bold,
-      italic: item.italic,
-      colorHex: item.colorHex || '1E293B',
-    },
-  };
-}
-
-/**
- * Builds high-level structured DocumentElements from raw page items
- */
-export function analyzePageLayout(rawPage: RawPageData): PageMetadata {
-  const isCover = detectCoverPage(rawPage);
-  const lines = groupItemsIntoLines(rawPage.items);
-
-  // Calculate median font size for relative heading classification
-  const fontSizes = rawPage.items.map((i) => i.fontSize).sort((a, b) => a - b);
-  const medianSize = fontSizes.length > 0 ? fontSizes[Math.floor(fontSizes.length / 2)] : 11;
-
-  const elements: DocumentElement[] = [];
-
-  // Check for multi-column regions (only on non-cover pages)
-  const columnInfo = !isCover
-    ? detectColumns(rawPage.items, rawPage.width, 54)
-    : { isMultiColumn: false, columnCount: 1, gutters: [] };
-
-  if (columnInfo.isMultiColumn && columnInfo.gutters.length === 1) {
-    const gutterX = columnInfo.gutters[0];
-    const leftItems = rawPage.items.filter((it) => it.x + it.width <= gutterX);
-    const rightItems = rawPage.items.filter((it) => it.x >= gutterX);
-
-    const leftLines = groupItemsIntoLines(leftItems);
-    const rightLines = groupItemsIntoLines(rightItems);
-
-    const col1Elements = convertLinesToElements(leftLines, medianSize, rawPage.pageNumber, false);
-    const col2Elements = convertLinesToElements(rightLines, medianSize, rawPage.pageNumber, false);
-
-    elements.push({
-      id: `p${rawPage.pageNumber}_multicol`,
-      type: 'columns',
-      pageNumber: rawPage.pageNumber,
-      y: lines[0]?.y || 54,
-      columns: {
-        columnCount: 2,
-        columns: [
-          { index: 0, elements: col1Elements, widthPct: 50 },
-          { index: 1, elements: col2Elements, widthPct: 50 },
-        ],
+      table: {
+        rows,
+        columnCount: maxCols,
+        columnWidthsPct,
+        hasBorders: true,
       },
-    });
-  } else {
-    // Process lines in standard sequence with table and formula detection
-    const standardElements = convertLinesToElements(lines, medianSize, rawPage.pageNumber, isCover);
-    elements.push(...standardElements);
+      consumedCount: candidateRows.length,
+    };
   }
 
-  return {
-    pageNumber: rawPage.pageNumber,
-    width: rawPage.width,
-    height: rawPage.height,
-    isLandscape: rawPage.width > rawPage.height,
-    isCoverPage: isCover,
-    isScannedPage: rawPage.items.length === 0,
-    columnCount: columnInfo.columnCount,
-    elements,
-  };
+  return null;
 }
 
 /**
- * Converts a sequence of lines into typed DocumentElements
+ * Converts a sequence of text lines into semantically typed DocumentElements
  */
 function convertLinesToElements(
   lines: { y: number; items: RawItem[] }[],
@@ -399,7 +301,7 @@ function convertLinesToElements(
   let i = 0;
 
   while (i < lines.length) {
-    // 1. Check for Table
+    // 1. Table Detection
     const tableDetection = detectTableFromLines(lines, i);
     if (tableDetection) {
       result.push({
@@ -424,9 +326,9 @@ function convertLinesToElements(
     const isBold = line.items.some((it) => it.bold);
     const runs = line.items.map(rawItemToRun);
 
-    // 2. Cover page element classification
+    // 2. Cover Page Elements
     if (isCover) {
-      if (maxFontSize >= 22) {
+      if (maxFontSize >= 20 || (maxFontSize >= 16 && isBold)) {
         result.push({
           id: `p${pageNumber}_cover_title_${i}`,
           type: 'cover_title',
@@ -436,7 +338,7 @@ function convertLinesToElements(
           runs,
           alignment: 'center',
         });
-      } else if (maxFontSize >= 14) {
+      } else if (maxFontSize >= 13) {
         result.push({
           id: `p${pageNumber}_cover_sub_${i}`,
           type: 'cover_subtitle',
@@ -479,7 +381,7 @@ function convertLinesToElements(
       continue;
     }
 
-    // 4. Bullet list item
+    // 4. Bullet List Item
     if (isBulletListItem(lineText)) {
       result.push({
         id: `p${pageNumber}_bullet_${i}`,
@@ -493,7 +395,7 @@ function convertLinesToElements(
       continue;
     }
 
-    // 5. Numbered list item
+    // 5. Numbered List Item
     if (isNumberedListItem(lineText)) {
       result.push({
         id: `p${pageNumber}_num_${i}`,
@@ -507,7 +409,7 @@ function convertLinesToElements(
       continue;
     }
 
-    // 6. Headings based on absolute typography standards and relative font scale
+    // 6. Section Headings (H1, H2, H3)
     if (
       maxFontSize >= 14 ||
       maxFontSize >= medianSize * 1.35 ||
@@ -532,7 +434,7 @@ function convertLinesToElements(
       continue;
     }
 
-    // 7. Regular paragraph
+    // 7. Regular Paragraph
     result.push({
       id: `p${pageNumber}_p_${i}`,
       type: 'paragraph',
@@ -545,4 +447,98 @@ function convertLinesToElements(
   }
 
   return result;
+}
+
+/**
+ * Performs Deep Semantic Layout Analysis on a PDF page
+ * Spatially integrates text, multi-column zones, tables, and images
+ */
+export function analyzePageLayout(
+  rawPage: RawPageData,
+  pageImages: (ImageElementData & { x: number; y: number })[] = [],
+  pageDiagrams: DiagramElementData[] = []
+): PageMetadata {
+  const hasCoverIllustration = pageImages.some((img) => img.isCoverIllustration);
+  const isCover = detectCoverPage(rawPage, hasCoverIllustration);
+
+  // Calculate median font size
+  const fontSizes = rawPage.items.map((i) => i.fontSize).sort((a, b) => a - b);
+  const medianSize = fontSizes.length > 0 ? fontSizes[Math.floor(fontSizes.length / 2)] : 11;
+
+  const elements: DocumentElement[] = [];
+
+  // Check for multi-column layout
+  const columnInfo = !isCover
+    ? detectColumnGutter(rawPage.items, rawPage.width)
+    : { isMultiColumn: false, gutterX: 0, gutterWidth: 0 };
+
+  if (columnInfo.isMultiColumn && columnInfo.gutterX > 0) {
+    // Segregate items by columns: Left Column (x < gutterX) and Right Column (x > gutterX)
+    const gutterX = columnInfo.gutterX;
+    const leftItems = rawPage.items.filter((it) => it.x + it.width <= gutterX + 10);
+    const rightItems = rawPage.items.filter((it) => it.x >= gutterX - 10);
+
+    const leftLines = groupItemsIntoLines(leftItems);
+    const rightLines = groupItemsIntoLines(rightItems);
+
+    const col1Elements = convertLinesToElements(leftLines, medianSize, rawPage.pageNumber, false);
+    const col2Elements = convertLinesToElements(rightLines, medianSize, rawPage.pageNumber, false);
+
+    elements.push({
+      id: `p${rawPage.pageNumber}_multicol`,
+      type: 'columns',
+      pageNumber: rawPage.pageNumber,
+      y: rawPage.items[0]?.y || 54,
+      columns: {
+        columnCount: 2,
+        columns: [
+          { index: 0, elements: col1Elements, widthPct: 50 },
+          { index: 1, elements: col2Elements, widthPct: 50 },
+        ],
+      },
+    });
+  } else {
+    // Standard single-column flow
+    const lines = groupItemsIntoLines(rawPage.items);
+    const standardElements = convertLinesToElements(lines, medianSize, rawPage.pageNumber, isCover);
+    elements.push(...standardElements);
+  }
+
+  // Interleave Images by their true spatial Y position
+  for (const img of pageImages) {
+    elements.push({
+      id: `elem_${img.id}`,
+      type: 'image',
+      pageNumber: rawPage.pageNumber,
+      y: img.y,
+      x: img.x,
+      image: img,
+    });
+  }
+
+  // Interleave Diagrams by their true spatial Y position
+  for (const diag of pageDiagrams) {
+    elements.push({
+      id: `elem_${diag.id}`,
+      type: 'diagram',
+      pageNumber: rawPage.pageNumber,
+      y: diag.boundingBox.minY,
+      x: diag.boundingBox.minX,
+      diagram: diag,
+    });
+  }
+
+  // Sort elements by Y coordinate to preserve true reading order
+  elements.sort((a, b) => a.y - b.y);
+
+  return {
+    pageNumber: rawPage.pageNumber,
+    width: rawPage.width,
+    height: rawPage.height,
+    isLandscape: rawPage.width > rawPage.height,
+    isCoverPage: isCover,
+    isScannedPage: rawPage.items.length === 0,
+    columnCount: columnInfo.isMultiColumn ? 2 : 1,
+    elements,
+  };
 }

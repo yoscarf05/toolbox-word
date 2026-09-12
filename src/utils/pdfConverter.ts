@@ -144,7 +144,22 @@ export async function extractStructuredPdf(
         };
       });
 
-    // 2. Perform Layout and Semantic Detection (Cover, Columns, Tables, Lists, Headings)
+    // 2. Extract Embedded Raster Images with CTM-tracked spatial coordinates
+    const extractedImages = await extractPageImages(page, pageNum, pageWidth, pageHeight);
+    if (extractedImages.length > 0) {
+      hasImages = true;
+    }
+
+    // 3. Render Page to Canvas for Diagram Snapshots and Scanned Page OCR
+    const pageCanvas = await renderPageToCanvas(page, 2.0);
+    const extractedDiagrams = pageCanvas
+      ? await extractDiagramsFromPage(page, pageNum, pageWidth, pageHeight, pageCanvas)
+      : [];
+    if (extractedDiagrams.length > 0) {
+      hasDiagrams = true;
+    }
+
+    // 4. Perform Layout and Semantic Detection with spatially interleaved visuals
     const rawPageData: RawPageData = {
       pageNumber: pageNum,
       width: pageWidth,
@@ -152,53 +167,12 @@ export async function extractStructuredPdf(
       items: rawItems,
     };
 
-    const pageLayout = analyzePageLayout(rawPageData);
+    const pageLayout = analyzePageLayout(rawPageData, extractedImages, extractedDiagrams);
 
     if (pageLayout.isCoverPage) hasCoverPage = true;
     if (pageLayout.columnCount > 1) hasMultiColumns = true;
     if (pageLayout.elements.some((e) => e.type === 'table')) hasTables = true;
     if (pageLayout.elements.some((e) => e.type === 'formula')) hasFormulas = true;
-
-    // 3. Extract Embedded Raster Images
-    const extractedImages = await extractPageImages(page, pageNum, pageWidth, pageHeight);
-    if (extractedImages.length > 0) {
-      hasImages = true;
-      for (const img of extractedImages) {
-        pageLayout.elements.push({
-          id: `elem_${img.id}`,
-          type: 'image',
-          pageNumber: pageNum,
-          y: pageHeight * 0.5,
-          image: img,
-        });
-      }
-    }
-
-    // 4. Render Page to Canvas for Diagram Snapshots and Scanned Page OCR
-    const pageCanvas = await renderPageToCanvas(page, 2.0);
-
-    // Extract Vector Diagram Snapshots (charts, schematics, vector drawings)
-    if (pageCanvas) {
-      const extractedDiagrams = await extractDiagramsFromPage(
-        page,
-        pageNum,
-        pageWidth,
-        pageHeight,
-        pageCanvas
-      );
-      if (extractedDiagrams.length > 0) {
-        hasDiagrams = true;
-        for (const diag of extractedDiagrams) {
-          pageLayout.elements.push({
-            id: `elem_${diag.id}`,
-            type: 'diagram',
-            pageNumber: pageNum,
-            y: diag.boundingBox.minY,
-            diagram: diag,
-          });
-        }
-      }
-    }
 
     // 5. Handle Scanned Documents with OCR
     if (pageLayout.isScannedPage && pageCanvas) {

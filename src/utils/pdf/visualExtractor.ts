@@ -1,6 +1,7 @@
 /**
  * Visual Asset Extractor for PDF Documents
- * Handles native raster image extraction, vector diagram snapshots, and OCR for scanned documents.
+ * High-fidelity native raster image extraction, vector diagram snapshots,
+ * and spatial coordinate mapping using the graphics state CTM.
  */
 
 import * as pdfjsLib from 'pdfjs-dist';
@@ -8,11 +9,11 @@ import Tesseract from 'tesseract.js';
 import type {
   ImageElementData,
   DiagramElementData,
-  DocumentElement,
 } from './types.ts';
+import { extractSpatialGraphics, LocatedImage } from './spatialTracker.ts';
 
 /**
- * Converts ImageData or raw RGBA buffer into PNG Uint8Array using browser or offscreen Canvas
+ * Converts ImageData or raw RGBA buffer into PNG Uint8Array using browser Canvas
  */
 export function rgbaToPngUint8(
   rgba: Uint8ClampedArray | Uint8Array,
@@ -48,20 +49,26 @@ export function rgbaToPngUint8(
 }
 
 /**
- * Extracts embedded raster images from a PDF.js page
+ * Extracts embedded raster images from a PDF.js page with exact spatial positioning
  */
 export async function extractPageImages(
   page: any,
   pageNumber: number,
   pageWidth: number,
   pageHeight: number
-): Promise<ImageElementData[]> {
-  const images: ImageElementData[] = [];
+): Promise<(ImageElementData & { x: number; y: number })[]> {
+  const result: (ImageElementData & { x: number; y: number })[] = [];
 
   try {
+    // 1. Extract physical coordinates via CTM tracking
+    const { images: spatialImages } = await extractSpatialGraphics(page, pageWidth, pageHeight);
+
+    // 2. Fetch image payloads from PDF.js operator list
     const ops = await page.getOperatorList();
     const fnArray = ops.fnArray;
     const argsArray = ops.argsArray;
+
+    let spatialIdx = 0;
 
     for (let i = 0; i < fnArray.length; i++) {
       const fn = fnArray[i];
@@ -71,6 +78,8 @@ export async function extractPageImages(
         fn === pdfjsLib.OPS.paintInlineImageXObject
       ) {
         const imgName = argsArray[i][0];
+        const spatialInfo: LocatedImage | undefined = spatialImages[spatialIdx++];
+
         try {
           const imgObj = await new Promise<any>((resolve) => {
             if (page.objs && page.objs.has(imgName)) {
@@ -87,7 +96,7 @@ export async function extractPageImages(
           const rawW = imgObj.width;
           const rawH = imgObj.height;
 
-          // Skip tiny decorative 1x1 pixels or line dividers
+          // Skip tiny 1x1 noise or decorative hairline dividers
           if (rawW < 12 || rawH < 12) continue;
 
           let pngBytes: Uint8Array | null = null;
@@ -95,10 +104,11 @@ export async function extractPageImages(
           if (imgObj.data instanceof Uint8ClampedArray || imgObj.data instanceof Uint8Array) {
             let rgbaData: Uint8ClampedArray;
             if (imgObj.kind === 1 || imgObj.kind === 2) {
-              // Grayscale or RGB
+              // Grayscale (kind 1) or RGB (kind 2)
               rgbaData = new Uint8ClampedArray(rawW * rawH * 4);
               const src = imgObj.data;
               const isRgb = src.length >= rawW * rawH * 3;
+
               for (let p = 0; p < rawW * rawH; p++) {
                 if (isRgb) {
                   rgbaData[p * 4] = src[p * 3];
@@ -114,6 +124,7 @@ export async function extractPageImages(
                 }
               }
             } else {
+              // RGBA or direct buffer
               rgbaData = new Uint8ClampedArray(imgObj.data.buffer || imgObj.data);
             }
 
@@ -122,29 +133,43 @@ export async function extractPageImages(
 
           if (pngBytes && pngBytes.length > 50) {
             const aspect = rawW / rawH;
-            // Target reasonable display width in points (max 480pt)
-            const displayW = Math.min(480, Math.max(120, rawW * 0.75));
-            const displayH = displayW / aspect;
+            // Use exact physical dimensions if captured by CTM tracker, else compute reasonable bounds
+            const displayW = spatialInfo?.width 
+              ? Math.min(pageWidth - 72, Math.max(40, spatialInfo.width))
+              : Math.min(480, Math.max(120, rawW * 0.75));
 
-            images.push({
+            const displayH = spatialInfo?.height
+              ? Math.min(pageHeight - 72, Math.max(30, spatialInfo.height))
+              : displayW / aspect;
+
+            const posX = spatialInfo?.x !== undefined ? spatialInfo.x : (pageWidth - displayW) / 2;
+            const posY = spatialInfo?.y !== undefined ? spatialInfo.y : pageHeight * 0.3;
+
+            // Check if this image covers a major portion of the page (possible cover artwork or header banner)
+            const isCoverIllustration = pageNumber === 1 && (displayW > pageWidth * 0.5 || displayH > pageHeight * 0.3);
+
+            result.push({
               id: `img_p${pageNumber}_${i}`,
               imageData: pngBytes,
               mimeType: 'image/png',
               widthPt: displayW,
               heightPt: displayH,
               aspectRatio: aspect,
+              x: posX,
+              y: posY,
+              isCoverIllustration,
             });
           }
         } catch (e) {
-          // Non-critical image extraction error
+          // Continue processing remaining images
         }
       }
     }
   } catch (e) {
-    // Non-critical operator list error
+    console.warn('Image extraction warning:', e);
   }
 
-  return images;
+  return result;
 }
 
 /**
@@ -172,7 +197,7 @@ export async function renderPageToCanvas(
 }
 
 /**
- * Detects if a page has vector diagram clusters and crops them as high-res images
+ * Extracts vector diagram snapshots (charts, complex geometric paths, schematics)
  */
 export async function extractDiagramsFromPage(
   page: any,
@@ -189,7 +214,6 @@ export async function extractDiagramsFromPage(
     const ops = await page.getOperatorList();
     const fnArray = ops.fnArray;
 
-    // Check count of vector path drawing operations
     let vectorPathOps = 0;
     for (const fn of fnArray) {
       if (
@@ -202,14 +226,13 @@ export async function extractDiagramsFromPage(
       }
     }
 
-    // If page has a dense cluster of vector operations (charts, diagrams, geometric figures)
-    if (vectorPathOps > 45) {
+    // Dense cluster of drawing operations indicates charts, schematics, or graphics
+    if (vectorPathOps > 50) {
       const scale = renderedCanvas.width / pageWidth;
-      // Capture diagram snapshot from the middle or lower section of page
       const cropW = Math.min(pageWidth - 72, 480);
       const cropH = Math.min(pageHeight * 0.45, 300);
       const cropX = (pageWidth - cropW) / 2;
-      const cropY = pageHeight * 0.28;
+      const cropY = pageHeight * 0.3;
 
       const cropCanvas = document.createElement('canvas');
       cropCanvas.width = cropW * scale;
@@ -233,60 +256,51 @@ export async function extractDiagramsFromPage(
         const base64 = dataUrl.split(',')[1];
         const binary = atob(base64);
         const bytes = new Uint8Array(binary.length);
-        for (let j = 0; j < binary.length; j++) {
-          bytes[j] = binary.charCodeAt(j);
+        for (let b = 0; b < binary.length; b++) {
+          bytes[b] = binary.charCodeAt(b);
         }
 
-        diagrams.push({
-          id: `diag_p${pageNumber}_0`,
-          imageData: bytes,
-          widthPt: cropW,
-          heightPt: cropH,
-          boundingBox: {
-            minX: cropX,
-            minY: cropY,
-            maxX: cropX + cropW,
-            maxY: cropY + cropH,
-          },
-        });
+        if (bytes.length > 500) {
+          diagrams.push({
+            id: `diag_p${pageNumber}_0`,
+            imageData: bytes,
+            widthPt: cropW,
+            heightPt: cropH,
+            boundingBox: {
+              minX: cropX,
+              minY: cropY,
+              maxX: cropX + cropW,
+              maxY: cropY + cropH,
+            },
+          });
+        }
       }
     }
   } catch (e) {
-    // Non-critical diagram extraction error
+    // Non-critical diagram extraction warning
   }
 
   return diagrams;
 }
 
 /**
- * Performs OCR on a scanned page using Tesseract.js
+ * Performs OCR on scanned page canvas using Tesseract.js
  */
 export async function performOcrOnScannedPage(
-  canvas: HTMLCanvasElement,
-  onProgress?: (pct: number) => void
-): Promise<{ text: string; lines: string[] }> {
+  canvas: HTMLCanvasElement
+): Promise<{ text: string; confidence: number }> {
   try {
     const dataUrl = canvas.toDataURL('image/png');
-    const result = await Tesseract.recognize(dataUrl, 'spa+eng', {
-      logger: (m) => {
-        if (m.status === 'recognizing text' && onProgress) {
-          onProgress(Math.round(m.progress * 100));
-        }
-      },
-    });
-
-    const fullText = result.data.text || '';
-    const rawLines = fullText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
+    const worker = await Tesseract.createWorker('spa+eng');
+    const ret = await worker.recognize(dataUrl);
+    await worker.terminate();
 
     return {
-      text: fullText,
-      lines: rawLines,
+      text: ret.data.text,
+      confidence: ret.data.confidence,
     };
-  } catch (e) {
-    console.warn('OCR processing skipped or failed:', e);
-    return { text: '', lines: [] };
+  } catch (err) {
+    console.warn('OCR error fallback:', err);
+    return { text: '', confidence: 0 };
   }
 }
