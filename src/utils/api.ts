@@ -53,19 +53,49 @@ export async function safeFetchJson<T = any>(
     const json = await res.json();
 
     if (!res.ok) {
+      // Bulletproof string extraction to prevent non-string objects (like { code, message }) from crashing React with Minified Error #31
+      let extractedMessage = 'Ocurrió un error en la solicitud.';
+      if (typeof json?.message === 'string' && json.message.trim()) {
+        extractedMessage = json.message;
+      } else if (typeof json?.error === 'string' && json.error.trim()) {
+        extractedMessage = json.error;
+      } else if (json?.error && typeof json.error === 'object') {
+        if (typeof json.error.message === 'string' && json.error.message.trim()) {
+          extractedMessage = json.error.message;
+        } else if (typeof json.error.code === 'string' && json.error.code.trim()) {
+          extractedMessage = `Error: ${json.error.code}`;
+        }
+      } else if (typeof json?.code === 'string') {
+        extractedMessage = `Error del servidor (${json.code})`;
+      }
+
+      let extractedError = `Error_${res.status}`;
+      if (typeof json?.error === 'string' && json.error.trim()) {
+        extractedError = json.error;
+      } else if (json?.error && typeof json.error.code === 'string') {
+        extractedError = json.error.code;
+      } else if (typeof json?.code === 'string') {
+        extractedError = json.code;
+      }
+
       return {
         ok: false,
         status: res.status,
-        error: json.error || `Error_${res.status}`,
-        message: json.message || json.error || 'Ocurrió un error en la solicitud.'
+        error: String(extractedError),
+        message: String(extractedMessage)
       };
+    }
+
+    let successMessage: string | undefined = undefined;
+    if (typeof json?.message === 'string') {
+      successMessage = json.message;
     }
 
     return {
       ok: true,
       status: res.status,
       data: json as T,
-      message: json.message
+      message: successMessage
     };
   } catch (err: any) {
     if (err?.name === 'AbortError') {
@@ -81,7 +111,7 @@ export async function safeFetchJson<T = any>(
       ok: false,
       status: 0,
       error: 'NetworkError',
-      message: err?.message || 'Error de conexión. Verifica tu conexión a internet o el estado del servidor.'
+      message: typeof err?.message === 'string' ? err.message : 'Error de conexión. Verifica tu conexión a internet o el estado del servidor.'
     };
   } finally {
     clearTimeout(timeoutId);

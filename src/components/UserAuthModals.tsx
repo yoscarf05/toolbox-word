@@ -78,6 +78,23 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [recoveryFeedback, setRecoveryFeedback] = useState<{ message: string; success: boolean } | null>(null);
 
+  // Helper to ensure any error is rendered strictly as text, preventing Minified React Error #31
+  const renderSafeErrorText = (err: any): string => {
+    if (!err) return '';
+    if (typeof err === 'string') return err;
+    if (typeof err === 'object') {
+      if (typeof err.message === 'string') return err.message;
+      if (typeof err.error === 'string') return err.error;
+      if (typeof err.code === 'string') return `Error (${err.code})`;
+      try {
+        return JSON.stringify(err);
+      } catch {
+        return 'Ocurrió un error inesperado.';
+      }
+    }
+    return String(err);
+  };
+
   // 2FA Verification State (for Super Admin)
   const [pending2FA, setPending2FA] = useState<{
     tempToken: string;
@@ -515,7 +532,7 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
 
                   {errorMsg && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                      {errorMsg}
+                      {renderSafeErrorText(errorMsg)}
                     </p>
                   )}
 
@@ -573,13 +590,13 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                         ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800' 
                         : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
                     }`}>
-                      {recoveryFeedback.message}
+                      {renderSafeErrorText(recoveryFeedback.message)}
                     </div>
                   )}
 
                   {errorMsg && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                      {errorMsg}
+                      {renderSafeErrorText(errorMsg)}
                     </p>
                   )}
 
@@ -708,13 +725,13 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                         ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800' 
                         : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
                     }`}>
-                      {recoveryFeedback.message}
+                      {renderSafeErrorText(recoveryFeedback.message)}
                     </div>
                   )}
 
                   {errorMsg && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                      {errorMsg}
+                      {renderSafeErrorText(errorMsg)}
                     </p>
                   )}
 
@@ -825,7 +842,7 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
 
                   {errorMsg && (
                     <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                      {errorMsg}
+                      {renderSafeErrorText(errorMsg)}
                     </p>
                   )}
 
@@ -996,7 +1013,7 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                     {errorMsg && (
                       <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 space-y-1.5">
                         <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                          {errorMsg}
+                          {renderSafeErrorText(errorMsg)}
                         </p>
                         {authMode === 'login' && (
                           <p className="text-[11px] text-slate-600 dark:text-slate-400">

@@ -33,19 +33,26 @@ export function createApp() {
   initializeSuperAdmin();
 
   // API Health Check
-  app.get('/api/health', (req, res) => {
+  const healthHandler = (req: express.Request, res: express.Response) => {
     res.json({
       status: 'ok',
       service: 'Toolbox Word API',
       database: 'PostgreSQL',
       timestamp: Date.now()
     });
-  });
+  };
+  app.get('/api/health', healthHandler);
+  app.get('/health', healthHandler);
 
-  // API Routes
+  // API Routes (Mounted under both /api/* and /* to support all serverless and container proxy configurations)
   app.use('/api/auth', authRouter);
+  app.use('/auth', authRouter);
+
   app.use('/api/analytics', analyticsRouter);
+  app.use('/analytics', analyticsRouter);
+
   app.use('/api/admin', adminRouter);
+  app.use('/admin', adminRouter);
 
   // Metadata Extractor API (Available in both local & production serverless)
   app.get('/api/extract-metadata', async (req, res) => {
