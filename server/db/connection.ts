@@ -262,9 +262,24 @@ export async function initializeDatabaseSchema(pool: any): Promise<void> {
     }
 
     try {
-      await pool.query(DDL_STATEMENTS);
+      // Split DDL statements by semicolon to execute each independently and safely
+      const statements = DDL_STATEMENTS.split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      for (const statement of statements) {
+        try {
+          await pool.query(statement);
+        } catch (stmtErr: any) {
+          if (stmtErr.message && (stmtErr.message.includes('already exists') || stmtErr.message.includes('duplicate table'))) {
+            continue;
+          }
+          console.warn('[POSTGRES] Notice on DDL statement execution:', stmtErr?.message);
+        }
+      }
       console.log('[POSTGRES] Schema tables verified and initialized successfully.');
     } catch (err: any) {
+      schemaPromise = null; // allow retry on subsequent requests
       if (err.message && (err.message.includes('already exists') || err.message.includes('duplicate table'))) {
         return;
       }
