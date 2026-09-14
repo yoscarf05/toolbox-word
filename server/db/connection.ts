@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Pool as PgPool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { newDb } from 'pg-mem';
@@ -147,21 +149,70 @@ CREATE TABLE IF NOT EXISTS feedback_and_reports (
 );
 `;
 
+export function sanitizeDatabaseUrl(rawUrl?: string): string | undefined {
+  if (!rawUrl) return undefined;
+  let clean = rawUrl.trim();
+  // Strip any leading '=' characters or whitespace that might come from bad env declarations
+  while (clean.startsWith('=')) {
+    clean = clean.substring(1).trim();
+  }
+  // Strip accidental variable assignment prefix e.g. "DATABASE_URL=..." or "POSTGRES_URL=..."
+  if (clean.startsWith('DATABASE_URL=')) {
+    clean = clean.substring('DATABASE_URL='.length).trim();
+  } else if (clean.startsWith('POSTGRES_URL=')) {
+    clean = clean.substring('POSTGRES_URL='.length).trim();
+  }
+  while (clean.startsWith('=')) {
+    clean = clean.substring(1).trim();
+  }
+  // Strip enclosing single or double quotes
+  if ((clean.startsWith("'") && clean.endsWith("'")) || (clean.startsWith('"') && clean.endsWith('"'))) {
+    clean = clean.slice(1, -1).trim();
+  }
+  return clean.length > 0 ? clean : undefined;
+}
+
 export function getDb(): DbInstance {
   if (dbInstance) {
     return dbInstance;
   }
 
-  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  let rawUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-  if (databaseUrl && databaseUrl.trim().length > 0) {
-    console.log('[POSTGRES] Initializing PostgreSQL connection with DATABASE_URL...');
+  // Fallback to read from .env if running in Node and process.env is missing it
+  if (!rawUrl) {
+    for (const envFile of ['.env', '.env.local']) {
+      const envPath = path.join(process.cwd(), envFile);
+      if (fs.existsSync(envPath)) {
+        try {
+          const content = fs.readFileSync(envPath, 'utf-8');
+          const match = content.match(/DATABASE_URL=([^\r\n]+)/);
+          if (match && match[1].trim()) {
+            rawUrl = match[1].trim();
+            break;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
+  const databaseUrl = sanitizeDatabaseUrl(rawUrl);
+  const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+
+  if (databaseUrl) {
+    console.log('[POSTGRES] Initializing PostgreSQL connection with Neon/PostgreSQL...');
     const pool = new PgPool({
       connectionString: databaseUrl,
       ssl: databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1') ? false : { rejectUnauthorized: false },
       max: process.env.VERCEL ? 5 : 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000
+    });
+
+    pool.on('error', (err) => {
+      console.error('[POSTGRES] Pool client error:', err);
     });
 
     const drizzleDb = drizzle(pool, { schema });
@@ -173,8 +224,13 @@ export function getDb(): DbInstance {
     return dbInstance;
   }
 
-  // Fallback to in-memory PostgreSQL engine for local development and offline testing
-  console.log('[POSTGRES] No DATABASE_URL specified. Initializing in-memory PostgreSQL engine (pg-mem)...');
+  if (isProduction) {
+    console.error('[POSTGRES] ERROR CRÍTICO: DATABASE_URL no configurada en entorno de producción.');
+    throw new Error('[POSTGRES] ERROR CRÍTICO: La base de datos de producción debe ser Neon PostgreSQL y requiere DATABASE_URL válida.');
+  }
+
+  // Fallback to in-memory PostgreSQL engine ONLY for automated test suites or offline local dev
+  console.warn('[POSTGRES] AVISO: Sin DATABASE_URL. Inicializando motor de pruebas en memoria (pg-mem)...');
   const memDb = newDb();
   const pgAdapter = memDb.adapters.createPg();
   const pool = new pgAdapter.Pool();

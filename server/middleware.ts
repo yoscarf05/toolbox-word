@@ -91,46 +91,57 @@ export function rateLimiter(options: {
 }
 
 // Session resolver middleware
-export function resolveSession(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  // Check cookie or Bearer token
-  let token = req.cookies?.toolbox_session;
-  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
-    token = req.headers.authorization.substring(7).trim();
+export async function resolveSession(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    // Check cookie or Bearer token
+    let token = req.cookies?.toolbox_session;
+    if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.substring(7).trim();
+    }
+
+    if (!token) {
+      return next();
+    }
+
+    const data = db.getData();
+    let session = data.sessions.find((s) => s.id === token && s.isValid);
+    if (!session) {
+      session = (await db.findSession(token)) || undefined;
+    }
+    if (!session) {
+      return next();
+    }
+
+    const now = Date.now();
+    if (session.expiresAt < now) {
+      session.isValid = false;
+      await db.saveSession(session);
+      return next();
+    }
+
+    let user = data.users.find((u) => u.id === session!.userId);
+    if (!user) {
+      user = (await db.findUserById(session.userId)) || undefined;
+    }
+    if (!user || user.status === 'blocked') {
+      session.isValid = false;
+      await db.saveSession(session);
+      return next();
+    }
+
+    // Touch session
+    session.lastActivityAt = now;
+    const timeoutMs = (data.settings.sessionTimeoutMinutes || 120) * 60 * 1000;
+    session.expiresAt = now + timeoutMs;
+    await db.saveSession(session);
+
+    req.user = user;
+    req.sessionRecord = session;
+    next();
+  } catch (err) {
+    console.error('[MIDDLEWARE] Error resolving session:', err);
+    next();
   }
-
-  if (!token) {
-    return next();
-  }
-
-  const data = db.getData();
-  const session = data.sessions.find((s) => s.id === token && s.isValid);
-  if (!session) {
-    return next();
-  }
-
-  const now = Date.now();
-  if (session.expiresAt < now) {
-    session.isValid = false;
-    db.save();
-    return next();
-  }
-
-  const user = data.users.find((u) => u.id === session.userId);
-  if (!user || user.status === 'blocked') {
-    session.isValid = false;
-    db.save();
-    return next();
-  }
-
-  // Touch session
-  session.lastActivityAt = now;
-  const timeoutMs = (data.settings.sessionTimeoutMinutes || 120) * 60 * 1000;
-  session.expiresAt = now + timeoutMs;
-  db.save();
-
-  req.user = user;
-  req.sessionRecord = session;
-  next();
 }
 
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {

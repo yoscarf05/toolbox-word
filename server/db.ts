@@ -685,6 +685,212 @@ class PostgresDatabase {
   public getPool(): any {
     return this.pool;
   }
+
+  public mapUserRow(u: any): UserRecord {
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      passwordHash: u.password_hash,
+      salt: u.salt,
+      role: u.role,
+      permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions) : (u.permissions || []),
+      totpSecret: u.totp_secret || undefined,
+      totpEnabled: Boolean(u.totp_enabled),
+      recoveryCodes: typeof u.recovery_codes === 'string' ? JSON.parse(u.recovery_codes) : (u.recovery_codes || []),
+      status: u.status || 'active',
+      createdAt: Number(u.created_at),
+      lastLoginAt: u.last_login_at ? Number(u.last_login_at) : undefined,
+      failedLoginAttempts: Number(u.failed_login_attempts || 0),
+      lockedUntil: u.locked_until ? Number(u.locked_until) : undefined,
+      resetPasswordTokenHash: u.reset_password_token_hash || undefined,
+      resetPasswordExpiresAt: u.reset_password_expires_at ? Number(u.reset_password_expires_at) : undefined
+    };
+  }
+
+  public async findUserByEmail(email: string): Promise<UserRecord | null> {
+    await this.ensureReady();
+    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const res = await this.pool.query(
+        'SELECT * FROM public.users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+        [cleanEmail]
+      );
+      if (res.rows.length === 0) {
+        return null;
+      }
+      const user = this.mapUserRow(res.rows[0]);
+      // Update memory cache as well
+      const idx = this.data.users.findIndex((u) => u.id === user.id || u.email.toLowerCase() === cleanEmail);
+      if (idx !== -1) {
+        this.data.users[idx] = user;
+      } else {
+        this.data.users.push(user);
+      }
+      return user;
+    } catch (err) {
+      console.error('[POSTGRES-DB] Error querying user by email from public.users:', err);
+      return this.data.users.find((u) => u.email.toLowerCase() === cleanEmail) || null;
+    }
+  }
+
+  public async findUserById(id: string): Promise<UserRecord | null> {
+    await this.ensureReady();
+    try {
+      const res = await this.pool.query(
+        'SELECT * FROM public.users WHERE id = $1 LIMIT 1',
+        [id]
+      );
+      if (res.rows.length === 0) {
+        return null;
+      }
+      const user = this.mapUserRow(res.rows[0]);
+      const idx = this.data.users.findIndex((u) => u.id === user.id);
+      if (idx !== -1) {
+        this.data.users[idx] = user;
+      } else {
+        this.data.users.push(user);
+      }
+      return user;
+    } catch (err) {
+      console.error('[POSTGRES-DB] Error querying user by id from public.users:', err);
+      return this.data.users.find((u) => u.id === id) || null;
+    }
+  }
+
+  public async saveUser(user: UserRecord): Promise<void> {
+    await this.ensureReady();
+    const idx = this.data.users.findIndex((u) => u.id === user.id);
+    if (idx !== -1) {
+      this.data.users[idx] = user;
+    } else {
+      this.data.users.push(user);
+    }
+
+    try {
+      await this.pool.query(
+        `INSERT INTO public.users (
+          id, name, email, password_hash, salt, role, permissions,
+          totp_secret, totp_enabled, recovery_codes, status,
+          created_at, last_login_at, failed_login_attempts, locked_until,
+          reset_password_token_hash, reset_password_expires_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          email = EXCLUDED.email,
+          password_hash = EXCLUDED.password_hash,
+          salt = EXCLUDED.salt,
+          role = EXCLUDED.role,
+          permissions = EXCLUDED.permissions,
+          totp_secret = EXCLUDED.totp_secret,
+          totp_enabled = EXCLUDED.totp_enabled,
+          recovery_codes = EXCLUDED.recovery_codes,
+          status = EXCLUDED.status,
+          last_login_at = EXCLUDED.last_login_at,
+          failed_login_attempts = EXCLUDED.failed_login_attempts,
+          locked_until = EXCLUDED.locked_until,
+          reset_password_token_hash = EXCLUDED.reset_password_token_hash,
+          reset_password_expires_at = EXCLUDED.reset_password_expires_at`,
+        [
+          user.id,
+          user.name,
+          user.email,
+          user.passwordHash,
+          user.salt,
+          user.role,
+          JSON.stringify(user.permissions || []),
+          user.totpSecret || null,
+          Boolean(user.totpEnabled),
+          JSON.stringify(user.recoveryCodes || []),
+          user.status || 'active',
+          user.createdAt,
+          user.lastLoginAt || null,
+          user.failedLoginAttempts || 0,
+          user.lockedUntil || null,
+          user.resetPasswordTokenHash || null,
+          user.resetPasswordExpiresAt || null
+        ]
+      );
+    } catch (err) {
+      console.error('[POSTGRES-DB] Error persisting user directly to public.users:', err);
+    }
+  }
+
+  public async saveSession(session: SessionRecord): Promise<void> {
+    await this.ensureReady();
+    const idx = this.data.sessions.findIndex((s) => s.id === session.id);
+    if (idx !== -1) {
+      this.data.sessions[idx] = session;
+    } else {
+      this.data.sessions.push(session);
+    }
+
+    try {
+      await this.pool.query(
+        `INSERT INTO public.sessions (id, user_id, role, ip, user_agent, device, browser, os, created_at, last_activity_at, expires_at, is_valid)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         ON CONFLICT (id) DO UPDATE SET
+           last_activity_at = EXCLUDED.last_activity_at,
+           expires_at = EXCLUDED.expires_at,
+           is_valid = EXCLUDED.is_valid`,
+        [
+          session.id,
+          session.userId,
+          session.role,
+          session.ip,
+          session.userAgent,
+          session.device,
+          session.browser,
+          session.os,
+          session.createdAt,
+          session.lastActivityAt,
+          session.expiresAt,
+          Boolean(session.isValid)
+        ]
+      );
+    } catch (err) {
+      console.error('[POSTGRES-DB] Error persisting session to public.sessions:', err);
+    }
+  }
+
+  public async findSession(id: string): Promise<SessionRecord | null> {
+    await this.ensureReady();
+    try {
+      const res = await this.pool.query(
+        'SELECT * FROM public.sessions WHERE id = $1 AND is_valid = true LIMIT 1',
+        [id]
+      );
+      if (res.rows.length === 0) {
+        return null;
+      }
+      const s = res.rows[0];
+      const session: SessionRecord = {
+        id: s.id,
+        userId: s.user_id,
+        role: s.role,
+        ip: s.ip,
+        userAgent: s.user_agent,
+        device: s.device,
+        browser: s.browser,
+        os: s.os,
+        createdAt: Number(s.created_at),
+        lastActivityAt: Number(s.last_activity_at),
+        expiresAt: Number(s.expires_at),
+        isValid: Boolean(s.is_valid)
+      };
+      const idx = this.data.sessions.findIndex((sess) => sess.id === session.id);
+      if (idx !== -1) {
+        this.data.sessions[idx] = session;
+      } else {
+        this.data.sessions.push(session);
+      }
+      return session;
+    } catch (err) {
+      console.error('[POSTGRES-DB] Error querying session from public.sessions:', err);
+      return this.data.sessions.find((s) => s.id === id && s.isValid) || null;
+    }
+  }
 }
 
 export const db = new PostgresDatabase();

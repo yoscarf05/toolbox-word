@@ -52,7 +52,7 @@ export async function safeFetchJson<T = any>(
         ok: false,
         status: res.status,
         error: json.error || `Error_${res.status}`,
-        message: json.message || 'Ocurrió un error en la solicitud.'
+        message: json.message || json.error || 'Ocurrió un error en la solicitud.'
       };
     }
 

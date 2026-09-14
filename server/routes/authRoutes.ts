@@ -50,13 +50,13 @@ authRouter.post(
       }
 
       const cleanEmail = String(email).trim().toLowerCase();
-      const data = db.getData();
-      const user = data.users.find((u) => u.email.toLowerCase() === cleanEmail);
+      // Look up user directly in public.users in Neon PostgreSQL
+      const user = await db.findUserByEmail(cleanEmail);
 
       if (!user) {
         // Constant-time simulation to prevent timing attacks
         verifyPassword(password, '0'.repeat(128), '0'.repeat(32));
-        return res.status(401).json({ error: 'InvalidCredentials', message: 'Credenciales inválidas.' });
+        return res.status(401).json({ error: 'InvalidCredentials', message: 'Credenciales incorrectas. Verifica tu correo y contraseña.' });
       }
 
       // Check account lockout
@@ -69,17 +69,18 @@ authRouter.post(
         });
       }
 
-      // Verify password
+      // Verify password with exact PBKDF2/SHA-512 implementation
       const isMatch = verifyPassword(password, user.passwordHash, user.salt);
       if (!isMatch) {
         user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
-        if (user.failedLoginAttempts >= (data.settings.maxLoginAttempts || 5)) {
-          const lockMs = (data.settings.lockoutMinutes || 15) * 60 * 1000;
+        const settings = db.getData().settings;
+        if (user.failedLoginAttempts >= (settings.maxLoginAttempts || 5)) {
+          const lockMs = (settings.lockoutMinutes || 15) * 60 * 1000;
           user.lockedUntil = now + lockMs;
           user.failedLoginAttempts = 0;
 
           // Alert for Super Admin
-          data.adminAlerts.unshift({
+          db.getData().adminAlerts.unshift({
             id: `alt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
             timestamp: now,
             severity: 'warning',
@@ -88,8 +89,8 @@ authRouter.post(
             read: false
           });
         }
-        db.save();
-        return res.status(401).json({ error: 'InvalidCredentials', message: 'Credenciales inválidas.' });
+        await db.saveUser(user);
+        return res.status(401).json({ error: 'InvalidCredentials', message: 'Credenciales incorrectas. Verifica tu correo y contraseña.' });
       }
 
       // Check if blocked by admin
@@ -100,7 +101,7 @@ authRouter.post(
       // Reset failed attempts on valid password
       user.failedLoginAttempts = 0;
       user.lockedUntil = undefined;
-      db.save();
+      await db.saveUser(user);
 
       // ROLE HANDLING:
       // If role === 'super_admin', TOTP is MANDATORY ALWAYS!
@@ -150,16 +151,37 @@ authRouter.post(
         });
       }
 
-      // Normal User or Regular Admin:
-      const session = createSession(user, req);
-      user.lastLoginAt = now;
-      db.save();
+      // Normal User or Regular Admin (optional TOTP if enabled):
+      if (user.totpEnabled && user.totpSecret) {
+        const tempToken = crypto.randomBytes(32).toString('hex');
+        pendingChallenges.set(tempToken, {
+          tempToken,
+          userId: user.id,
+          expiresAt: now + 5 * 60 * 1000,
+          setupMode: false,
+          attempts: 0
+        });
 
+        return res.json({
+          requires2FA: true,
+          tempToken,
+          message: 'Introduce el código de autenticación de tu aplicación TOTP.'
+        });
+      }
+
+      // Normal login: create valid session and authenticate
+      const session = createSession(user, req);
+      await db.saveSession(session);
+
+      user.lastLoginAt = now;
+      await db.saveUser(user);
+
+      const settings = db.getData().settings;
       res.cookie('toolbox_session', session.id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: (data.settings.sessionTimeoutMinutes || 120) * 60 * 1000
+        maxAge: (settings.sessionTimeoutMinutes || 120) * 60 * 1000
       });
 
       return res.json({
@@ -191,14 +213,14 @@ authRouter.post(
         return res.status(401).json({ error: 'SessionExpired', message: 'El tiempo para ingresar el segundo factor ha expirado. Inicia sesión nuevamente.' });
       }
 
-      const data = db.getData();
-      const user = data.users.find((u) => u.id === challenge.userId);
+      const user = await db.findUserById(challenge.userId);
       if (!user) {
         pendingChallenges.delete(tempToken);
         return res.status(401).json({ error: 'UserNotFound', message: 'Usuario no encontrado.' });
       }
 
       challenge.attempts = (challenge.attempts || 0) + 1;
+      const data = db.getData();
       if (challenge.attempts > 5) {
         pendingChallenges.delete(tempToken);
         data.adminAlerts.unshift({
@@ -262,8 +284,9 @@ authRouter.post(
 
       // Create session
       const session = createSession(user, req);
+      await db.saveSession(session);
       user.lastLoginAt = Date.now();
-      db.save();
+      await db.saveUser(user);
 
       // Log successful login
       logAudit(
@@ -353,8 +376,7 @@ authRouter.post(
       const cleanEmail = String(email).trim().toLowerCase();
       const cleanName = String(name || 'Usuario').trim().slice(0, 80);
 
-      const data = db.getData();
-      const existing = data.users.find((u) => u.email.toLowerCase() === cleanEmail);
+      const existing = await db.findUserByEmail(cleanEmail);
       if (existing) {
         return res.status(409).json({ error: 'EmailExists', message: 'Este correo ya tiene una cuenta registrada.' });
       }
@@ -375,15 +397,16 @@ authRouter.post(
         failedLoginAttempts: 0
       };
 
-      data.users.push(newUser);
+      await db.saveUser(newUser);
       const session = createSession(newUser, req);
-      db.save();
+      await db.saveSession(session);
 
+      const settings = db.getData().settings;
       res.cookie('toolbox_session', session.id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: (data.settings.sessionTimeoutMinutes || 120) * 60 * 1000
+        maxAge: (settings.sessionTimeoutMinutes || 120) * 60 * 1000
       });
 
       return res.json({

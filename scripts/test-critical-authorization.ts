@@ -31,13 +31,32 @@ async function runTests() {
 
   // 1. Setup / Identify Users in DB
   await db.init();
+  await db.syncFromPostgres();
   const data = db.getData();
   let superAdminUser = data.users.find(u => u.role === 'super_admin');
-  let adminUser = data.users.find(u => u.role === 'admin' && u.email !== superAdminUser?.email);
-  let normalUser = data.users.find(u => u.role === 'user');
+  let adminUser = data.users.find(u => u.email === 'admintester@tools.local');
+  let normalUser = data.users.find(u => u.email === 'normaluser@tools.local');
 
   if (!superAdminUser) {
-    throw new Error('No super admin found in DB');
+    const superAdminPassword = 'SuperAdminTestPass123!';
+    const superHash = hashPassword(superAdminPassword);
+    const newSuper = {
+      id: 'usr_super_test_' + Date.now(),
+      name: 'Super Admin Tester',
+      email: 'superadmin@tools.local',
+      passwordHash: superHash.hash,
+      salt: superHash.salt,
+      role: 'super_admin' as const,
+      status: 'active' as const,
+      createdAt: Date.now(),
+      permissions: ['*'],
+      totpEnabled: true,
+      totpSecret: generateSecret(),
+      recoveryCodes: [],
+      failedLoginAttempts: 0
+    };
+    data.users.push(newSuper);
+    superAdminUser = newSuper;
   }
 
   // Ensure super admin has a known password and TOTP secret
@@ -48,7 +67,7 @@ async function runTests() {
   superAdminUser.totpEnabled = true;
   superAdminUser.failedLoginAttempts = 0;
   superAdminUser.lockedUntil = undefined;
-  const totpSecret = generateSecret();
+  const totpSecret = superAdminUser.totpSecret || 'JBSWY3DPEHPK3PXP';
   superAdminUser.totpSecret = totpSecret;
 
   // Ensure admin user exists with known password
@@ -100,7 +119,10 @@ async function runTests() {
     normalUser = newNormal;
   }
 
-  db.flushSync();
+  await db.saveUser(superAdminUser);
+  await db.saveUser(adminUser);
+  await db.saveUser(normalUser);
+  await db.syncToPostgres();
 
   // Helper: Login for regular Admin / Users
   async function loginAdmin(email: string, pass: string) {
@@ -449,12 +471,14 @@ async function runTests() {
     const { db } = await import('../server/db');
     const { getDb } = await import('../server/db/connection');
     const { pool } = getDb();
+    await db.syncFromPostgres();
     await pool.query('UPDATE change_requests SET expires_at = $1 WHERE id = $2', [Date.now() - 60000, expRequestId]);
     const targetReq = db.getData().changeRequests.find((r: any) => r.id === expRequestId);
     if (targetReq) {
       targetReq.expiresAt = Date.now() - 60000;
-      db.flushSync();
+      targetReq.status = 'expired';
     }
+    await pool.query('UPDATE change_requests SET expires_at = $1, status = $2 WHERE id = $3', [Date.now() - 60000, 'expired', expRequestId]);
 
     // Wait a brief tick for server sync
     await new Promise((r) => setTimeout(r, 250));

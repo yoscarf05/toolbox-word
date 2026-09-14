@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import { db, UserRole } from '../db';
+import { getDb } from '../db/connection';
 import {
   AuthenticatedRequest,
   requireAdmin,
@@ -1160,12 +1161,32 @@ adminRouter.get('/change-requests/pending-count', (req: AuthenticatedRequest, re
 });
 
 // Single change request details
-adminRouter.get('/change-requests/:id', (req: AuthenticatedRequest, res: Response) => {
+adminRouter.get('/change-requests/:id', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { pool } = getDb();
+    const crRes = await pool.query('SELECT * FROM change_requests WHERE id = $1', [req.params.id]);
+    if (crRes.rows.length > 0) {
+      const row = crRes.rows[0];
+      const data = db.getData();
+      const idx = data.changeRequests.findIndex((item) => item && item.id === req.params.id);
+      const isExpired = Number(row.expires_at) < Date.now() && row.status === 'pending';
+      const actualStatus = isExpired ? 'expired' : row.status;
+      if (idx !== -1) {
+        data.changeRequests[idx].expiresAt = Number(row.expires_at);
+        data.changeRequests[idx].status = actualStatus as any;
+      }
+    }
+  } catch {}
+
   sweepExpiredRequests();
   const data = db.getData();
   const r = data.changeRequests.find((item) => item && item.id === req.params.id);
   if (!r) {
     return res.status(404).json({ error: 'Solicitud de cambio no encontrada.' });
+  }
+
+  if (r.status === 'pending' && r.expiresAt < Date.now()) {
+    r.status = 'expired';
   }
 
   return res.json({

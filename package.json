@@ -11,6 +11,7 @@
     "clean": "rm -rf dist server.js",
     "db:init": "tsx scripts/init-db.ts",
     "bootstrap:superadmin": "tsx scripts/bootstrap-super-admin.ts",
+    "sql:superadmin": "tsx scripts/generate-superadmin-sql.ts",
     "migrate:json2pg": "tsx scripts/migrate-json-to-pg.ts",
     "test:persistence": "tsx scripts/test-postgres-persistence.ts",
     "test:critical": "tsx scripts/test-critical-authorization.ts",

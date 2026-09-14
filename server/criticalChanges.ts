@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { db, UserRecord, ChangeRequestRecord, ChangeRequestStatus, UserRole } from './db';
+import { getDb } from './db/connection';
 import { AuthenticatedRequest, logAudit } from './middleware';
 
 export interface CriticalActionDefinition {
@@ -168,7 +169,33 @@ export function createChangeRequest(
     read: false
   });
 
-  db.save();
+  try {
+    const { pool } = getDb();
+    pool.query(
+      `INSERT INTO change_requests (id, requested_by, action, action_label, target_resource, sanitized_params, params_hash, risk_level, reason, potential_consequences, status, created_at, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       ON CONFLICT (id) DO UPDATE SET
+         status = EXCLUDED.status,
+         expires_at = EXCLUDED.expires_at`,
+      [
+        newRequest.id,
+        JSON.stringify(newRequest.requestedBy),
+        newRequest.action,
+        newRequest.actionLabel,
+        newRequest.targetResource,
+        JSON.stringify(newRequest.sanitizedParams),
+        newRequest.paramsHash,
+        newRequest.riskLevel,
+        newRequest.reason,
+        newRequest.potentialConsequences,
+        newRequest.status,
+        newRequest.createdAt,
+        newRequest.expiresAt
+      ]
+    ).catch(() => {});
+  } catch {}
+
+  db.flushSync();
 
   return newRequest;
 }

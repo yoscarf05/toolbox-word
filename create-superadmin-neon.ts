@@ -1,4 +1,3 @@
-ts
 import { hashPassword } from './server/auth';
 import crypto from 'crypto';
 import { Client } from 'pg';
@@ -8,6 +7,10 @@ const EMAIL = 'yocarortiz05@hotmail.com';
 const NAME = 'Yocar ortiz';
 
 function askPassword(): Promise<string> {
+  const envPass = process.env.SUPER_ADMIN_PASSWORD;
+  if (envPass && envPass.length >= 8) {
+    return Promise.resolve(envPass);
+  }
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
@@ -17,7 +20,7 @@ function askPassword(): Promise<string> {
 
     process.stdout.write('Escribe la contraseña del Super Admin: ');
 
-    let password = 'Yoscar05271117*';
+    let password = '';
 
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(true);
@@ -169,4 +172,3 @@ main().catch((error) => {
   console.error('\nERROR:', error.message);
   process.exit(1);
 });
-```
