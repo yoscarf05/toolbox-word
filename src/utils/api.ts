@@ -12,11 +12,16 @@ export interface ApiResponse<T = any> {
 
 export async function safeFetchJson<T = any>(
   url: string,
-  options?: RequestInit
+  options?: RequestInit,
+  timeoutMs: number = 15000
 ): Promise<ApiResponse<T>> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const res = await fetch(url, {
       ...options,
+      signal: options?.signal || controller.signal,
       headers: {
         'Accept': 'application/json',
         ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
@@ -63,6 +68,14 @@ export async function safeFetchJson<T = any>(
       message: json.message
     };
   } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      return {
+        ok: false,
+        status: 408,
+        error: 'TimeoutError',
+        message: 'La solicitud tardó demasiado tiempo en responder (tiempo límite agotado).'
+      };
+    }
     console.error('[API-CLIENT] Fetch failure:', err);
     return {
       ok: false,
@@ -70,5 +83,7 @@ export async function safeFetchJson<T = any>(
       error: 'NetworkError',
       message: err?.message || 'Error de conexión. Verifica tu conexión a internet o el estado del servidor.'
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

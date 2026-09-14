@@ -111,7 +111,26 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
     setPending2FA(null);
     setTotpCode('');
     setIsSubmitting(false);
+    setAuthMode('login');
+    setBootstrapSuccessMsg('');
   };
+
+  // Global Escape key listener to close modals gracefully
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isAuthModalOpen) {
+          setIsAuthModalOpen(false);
+          resetAuthState();
+        }
+        if (isProfileModalOpen) {
+          setIsProfileModalOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthModalOpen, isProfileModalOpen, setIsAuthModalOpen, setIsProfileModalOpen]);
 
   // Check if system requires initial super admin bootstrap
   useEffect(() => {
@@ -338,10 +357,16 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
       {/* 1. AUTH MODAL (LOGIN / REGISTER / MANDATORY TOTP) */}
       {/* ========================================================================= */}
       {isAuthModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div
+          onClick={handleCloseAuth}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md max-h-[92vh] flex flex-col my-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+          >
             {/* Header */}
-            <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
                   {pending2FA ? <KeyRound className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> : <User className="w-5 h-5" />}
@@ -382,7 +407,7 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
             </div>
 
             {/* Content Body */}
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
               {/* STEP A: TOTP 2FA Verification (Triggered strictly by backend for Super Admin) */}
               {pending2FA ? (
                 <form onSubmit={handleVerify2FASubmit} className="space-y-4">
@@ -969,9 +994,26 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
                     </div>
 
                     {errorMsg && (
-                      <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-                        {errorMsg}
-                      </p>
+                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 space-y-1.5">
+                        <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
+                          {errorMsg}
+                        </p>
+                        {authMode === 'login' && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                            {isEs ? '¿Aún no tienes una cuenta registrada?' : "Don't have an account yet?"}{' '}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAuthMode('register');
+                                setErrorMsg('');
+                              }}
+                              className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                            >
+                              {isEs ? 'Crear Cuenta aquí' : 'Create Account here'}
+                            </button>
+                          </p>
+                        )}
+                      </div>
                     )}
 
                     <button
@@ -1008,10 +1050,16 @@ export const UserAuthModals: React.FC<UserAuthModalsProps> = ({ lang, onNavigate
       {/* 2. PROFILE MODAL (FAVORITES, CITATIONS, HISTORY, ADMIN ACCESS, LOGOUT) */}
       {/* ========================================================================= */}
       {isProfileModalOpen && user && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
+        <div
+          onClick={() => setIsProfileModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl max-h-[88vh] flex flex-col my-auto bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+          >
             {/* Header */}
-            <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="p-5 sm:p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-extrabold text-lg shadow-md ${
                   isSuperAdmin 
