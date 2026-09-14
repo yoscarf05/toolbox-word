@@ -17,6 +17,7 @@ export interface SavedCitationItem {
 
 export interface LoginResult {
   success: boolean;
+  needsBootstrap?: boolean;
   requires2FA?: boolean;
   setup2FA?: boolean;
   tempToken?: string;
@@ -63,6 +64,9 @@ interface AuthContextType {
   setIsAuthModalOpen: (open: boolean) => void;
   isProfileModalOpen: boolean;
   setIsProfileModalOpen: (open: boolean) => void;
+  // Bootstrap state
+  needsBootstrap: boolean;
+  checkBootstrapStatus: () => Promise<boolean>;
   // Refresh user profile from server
   refreshUser: () => Promise<void>;
 }
@@ -122,11 +126,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // UI Modals
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [needsBootstrap, setNeedsBootstrap] = useState(false);
+
+  // Check if system requires initial super admin bootstrap
+  const checkBootstrapStatus = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await safeFetchJson<{ needsBootstrap: boolean }>('/api/auth/bootstrap-status');
+      if (res.ok && res.data?.needsBootstrap) {
+        setNeedsBootstrap(true);
+        return true;
+      }
+      setNeedsBootstrap(false);
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
 
   // Check current server session on mount
   const checkSession = useCallback(async () => {
     try {
       setIsLoading(true);
+      // Run bootstrap check in parallel with session check
+      checkBootstrapStatus();
       const headers: Record<string, string> = {};
       const savedToken = localStorage.getItem('toolbox_token');
       if (savedToken) {
@@ -182,9 +204,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password })
       });
 
+      if (res.data?.needsBootstrap) {
+        setNeedsBootstrap(true);
+        return {
+          success: false,
+          needsBootstrap: true,
+          error: res.data.message || 'Configuración inicial requerida.'
+        };
+      }
+
       if (!res.ok) {
         return {
           success: false,
+          needsBootstrap: res.data?.needsBootstrap || false,
           error: res.message || 'Error al iniciar sesión'
         };
       }
@@ -497,6 +529,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthModalOpen,
         isProfileModalOpen,
         setIsProfileModalOpen,
+        needsBootstrap,
+        checkBootstrapStatus,
         refreshUser: checkSession
       }}
     >

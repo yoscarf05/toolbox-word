@@ -54,6 +54,23 @@ authRouter.post(
       const user = await db.findUserByEmail(cleanEmail);
 
       if (!user) {
+        // Detect if the system is uninitialized (0 super admins in database)
+        let superAdminCount = 0;
+        try {
+          const pool = db.getPool();
+          const countRes = await pool.query("SELECT COUNT(*) AS count FROM users WHERE role = 'super_admin'");
+          superAdminCount = parseInt(countRes.rows[0]?.count || '0', 10);
+        } catch {
+          superAdminCount = 0;
+        }
+
+        if (superAdminCount === 0) {
+          return res.status(200).json({
+            needsBootstrap: true,
+            message: 'El sistema aún no tiene un Super Administrador configurado. Por favor completa la configuración inicial.'
+          });
+        }
+
         // Constant-time simulation to prevent timing attacks
         verifyPassword(password, '0'.repeat(128), '0'.repeat(32));
         return res.status(401).json({ error: 'InvalidCredentials', message: 'Credenciales incorrectas. Verifica tu correo y contraseña.' });
@@ -638,10 +655,9 @@ authRouter.get(
         needsBootstrap: superAdminCount === 0
       });
     } catch (err) {
-      console.error('[BOOTSTRAP] Error checking bootstrap status:', err);
-      return res.status(500).json({
-        error: 'InternalServerError',
-        message: 'Error al verificar estado de inicialización.'
+      console.warn('[BOOTSTRAP] Database check warning (falling back to needsBootstrap=true):', err);
+      return res.json({
+        needsBootstrap: true
       });
     }
   }

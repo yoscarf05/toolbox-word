@@ -33,7 +33,7 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({ lang, onNavigate }) => {
-  const { user, isAuthenticated, isAdmin, isSuperAdmin, logout, setIsAuthModalOpen, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, isSuperAdmin, logout, setIsAuthModalOpen, isLoading: isAuthLoading, needsBootstrap } = useAuth();
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [telemetry, setTelemetry] = useState({
@@ -133,6 +133,42 @@ export const AdminPage: React.FC<AdminPageProps> = ({ lang, onNavigate }) => {
 
   // Access Control Guard
   if (!isAuthenticated || !isAdmin) {
+    if (needsBootstrap) {
+      return (
+        <div className="min-h-[70vh] flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 shadow-xl text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {lang === 'es' ? 'Configuración Inicial Requerida' : 'Initial Setup Required'}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                {lang === 'es'
+                  ? 'Esta instalación aún no cuenta con un Super Administrador configurado. Aprovisiona tu cuenta inicial para acceder al panel.'
+                  : 'This installation does not have a Super Admin configured yet. Provision your initial account to access the panel.'}
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => onNavigate('/')}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 transition-colors"
+              >
+                {lang === 'es' ? 'Volver al Inicio' : 'Back to Home'}
+              </button>
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-amber-600 text-white text-xs font-bold hover:bg-amber-700 shadow-xs transition-colors cursor-pointer"
+              >
+                {lang === 'es' ? 'Configurar Super Admin' : 'Configure Super Admin'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-4">
         <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl text-center space-y-4">
