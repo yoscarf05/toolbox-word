@@ -14,16 +14,13 @@ export function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(cookieParser());
 
-  // Ensure DB ready on cold starts & flush state on finish
+  // Ensure DB ready on cold starts
   app.use(async (req, res, next) => {
     try {
       await db.ensureReady();
     } catch (err) {
       console.error('[SERVER] Failed to await db readiness:', err);
     }
-    res.on('finish', () => {
-      db.flushSync();
-    });
     next();
   });
 

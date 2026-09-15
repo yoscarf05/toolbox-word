@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { Pool as PgPool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { newDb } from 'pg-mem';
 import * as schema from './schema';
 
 export interface DbInstance {
@@ -12,6 +11,28 @@ export interface DbInstance {
 }
 
 let dbInstance: DbInstance | null = null;
+
+function createInMemoryPool(): any {
+  try {
+    // Lazy load pg-mem only if fallback is needed
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { newDb } = require('pg-mem');
+    const memDb = newDb();
+    const pgAdapter = memDb.adapters.createPg();
+    return new pgAdapter.Pool();
+  } catch (err) {
+    console.error('[POSTGRES] Could not initialize pg-mem pool:', err);
+    // Fallback minimal mock pool to prevent hard crashes
+    return {
+      query: async () => ({ rows: [] }),
+      connect: async () => ({
+        query: async () => ({ rows: [] }),
+        release: () => {}
+      }),
+      on: () => {}
+    };
+  }
+}
 
 export const DDL_STATEMENTS = `
 CREATE TABLE IF NOT EXISTS users (
@@ -169,6 +190,29 @@ export function sanitizeDatabaseUrl(rawUrl?: string): string | undefined {
   if ((clean.startsWith("'") && clean.endsWith("'")) || (clean.startsWith('"') && clean.endsWith('"'))) {
     clean = clean.slice(1, -1).trim();
   }
+
+  // Detect unpopulated or template placeholders that Vercel or Supabase might leave in "Needs Attention" state
+  const lower = clean.toLowerCase();
+  if (
+    lower.includes('[your-password]') ||
+    lower.includes('[your_password]') ||
+    lower.includes('<your-password>') ||
+    lower.includes('<password>') ||
+    lower.includes('[password]') ||
+    lower.includes('[your-database-password]') ||
+    lower.includes('placeholder') ||
+    clean === 'undefined' ||
+    clean === 'null'
+  ) {
+    console.warn('[POSTGRES] La variable de base de datos contiene texto de plantilla (por ejemplo [YOUR-PASSWORD] o Needs Attention en Vercel). Descartando URL no configurada.');
+    return undefined;
+  }
+
+  if (!clean.startsWith('postgres://') && !clean.startsWith('postgresql://')) {
+    console.warn('[POSTGRES] La URL no comienza con postgres:// ni postgresql://. Descartando.');
+    return undefined;
+  }
+
   return clean.length > 0 ? clean : undefined;
 }
 
@@ -177,10 +221,14 @@ export function getDb(): DbInstance {
     return dbInstance;
   }
 
-  let rawUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  // Check DATABASE_URL first; if valid, prefer it over POSTGRES_URL
+  let databaseUrl = sanitizeDatabaseUrl(process.env.DATABASE_URL);
+  if (!databaseUrl) {
+    databaseUrl = sanitizeDatabaseUrl(process.env.POSTGRES_URL);
+  }
 
   // Fallback to read from .env if running in Node and process.env is missing it
-  if (!rawUrl) {
+  if (!databaseUrl) {
     for (const envFile of ['.env', '.env.local']) {
       const envPath = path.join(process.cwd(), envFile);
       if (fs.existsSync(envPath)) {
@@ -188,8 +236,8 @@ export function getDb(): DbInstance {
           const content = fs.readFileSync(envPath, 'utf-8');
           const match = content.match(/DATABASE_URL=([^\r\n]+)/);
           if (match && match[1].trim()) {
-            rawUrl = match[1].trim();
-            break;
+            databaseUrl = sanitizeDatabaseUrl(match[1].trim());
+            if (databaseUrl) break;
           }
         } catch {
           // ignore
@@ -198,7 +246,6 @@ export function getDb(): DbInstance {
     }
   }
 
-  const databaseUrl = sanitizeDatabaseUrl(rawUrl);
   const isProduction = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
 
   if (databaseUrl) {
@@ -231,10 +278,13 @@ export function getDb(): DbInstance {
       console.warn('[POSTGRES] AVISO: Sin DATABASE_URL. Inicializando motor de pruebas en memoria (pg-mem)...');
     }
 
-    const memDb = newDb();
-    const pgAdapter = memDb.adapters.createPg();
-    const pool = new pgAdapter.Pool();
-    const drizzleDb = drizzle(pool, { schema });
+    const pool = createInMemoryPool();
+    let drizzleDb: any;
+    try {
+      drizzleDb = drizzle(pool, { schema });
+    } catch {
+      drizzleDb = null;
+    }
 
     dbInstance = {
       pool,

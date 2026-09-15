@@ -837,9 +837,21 @@ authRouter.post(
         }
       }
       console.error('[BOOTSTRAP] Error in bootstrap endpoint:', err);
+      const isDbConnError = err?.message && (
+        err.message.includes('connect') ||
+        err.message.includes('authentication') ||
+        err.message.includes('password') ||
+        err.message.includes('timeout') ||
+        err.message.includes('ECONNREFUSED') ||
+        err.message.includes('ENOTFOUND')
+      );
+      const userMessage = isDbConnError
+        ? `Error de conexión con la base de datos PostgreSQL (${err.message}). Verifica que tu base de datos esté activa y que las variables en Vercel (DATABASE_URL o POSTGRES_URL) no tengan el estado "Needs Attention".`
+        : (err?.message || 'Ocurrió un error interno durante el aprovisionamiento inicial.');
+
       return res.status(500).json({
-        error: 'InternalServerError',
-        message: 'Ocurrió un error interno durante el aprovisionamiento inicial.'
+        error: isDbConnError ? 'DatabaseConnectionError' : 'InternalServerError',
+        message: userMessage
       });
     } finally {
       isBootstrapExecuting = false;

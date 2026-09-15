@@ -122,6 +122,7 @@ class PostgresDatabase {
       console.log('[POSTGRES-DB] PostgreSQL Database service initialized and ready.');
     } catch (err) {
       console.error('[POSTGRES-DB] Error during PostgreSQL initialization:', err);
+      this.isInitialized = true;
     }
   }
 
